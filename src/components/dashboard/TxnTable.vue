@@ -13,7 +13,7 @@
 			</tr>
 			</thead>
 			<tbody v-if="this.mgr !== null">
-			<TxnRow v-for="(txn,key) in filteredTransactions" :key="key" :txn="txn" :token-info="tokenInfo" :prices="prices"></TxnRow>
+			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices"></TxnRow>
 			</tbody>
 		</table>
 		<div class="row">
