@@ -11,7 +11,7 @@
 		<td>{{ gasFee }}
 			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
-		<td :class="isAmountIncrease ? 'green' : 'red'">{{ amountSign }}{{ balanceChange.diff.toFixed(tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].decimals : 9) }}</td>
+		<td :class="colorStyle">{{ amountSign }}{{ balanceChange.diff.toFixed(tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].decimals : 9) }}</td>
 		<td>
 			<SHDW :mint-addr="tokenChange.mint" class="small"></SHDW>
 			{{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}
@@ -43,6 +43,12 @@ export default {
 		txn: {
 			type: Object,
 			required: true,
+		},
+		diff: {
+			type: Number,
+			default() {
+				return -1;
+			},
 		}
 	},
 	data() {
@@ -54,7 +60,6 @@ export default {
 			}),
 			balanceChange: {
 				diff: 0,
-				humanDiff: "0.0",
 			},
 
 			tokenChange: '',
@@ -74,6 +79,16 @@ export default {
 			return this.balanceChange.diff > 0;
 		},
 
+		colorStyle: function() {
+			if (this.balanceChange.diff > 0) {
+				return 'green';
+			} else if(this.balanceChange.diff < 0) {
+				return 'red';
+			}
+
+			return 'grey'
+		},
+
 		humanTime: function () {
 			return moment.unix(this.txn.blockTime).fromNow();
 		},
@@ -82,56 +97,64 @@ export default {
 			if (this.balanceChange.diff > 0)
 				return "+"
 
-			if (this.balanceChange.diff < 0)
-				return "-"
-
 			return "";
 		},
 	},
-	methods: {},
+	methods: {
+
+		calculateTxnProfit: function () {
+			const mintDiff = {};
+			const mintIdx = {};
+
+			for (let i = 0; i < this.txn.meta.postTokenBalances.length; i++) {
+				if (this.txn.meta.postTokenBalances[i].owner !== this.$route.params.id)
+					continue
+
+				const b = this.txn.meta.postTokenBalances[i]
+				mintDiff[b.mint] = b.uiTokenAmount.uiAmount
+				mintIdx[b.mint] = b
+			}
+
+			for (let i = 0; i < this.txn.meta.preTokenBalances.length; i++) {
+				if (this.txn.meta.preTokenBalances[i].owner !== this.$route.params.id)
+					continue
+
+				const b = this.txn.meta.preTokenBalances[i]
+				mintIdx[b.mint] = b
+				mintDiff[b.mint] -= b.uiTokenAmount.uiAmount
+				if (mintDiff[b.mint] === 0)
+					delete mintDiff[b.mint]
+			}
+
+			if (Object.keys(mintDiff).length === 0) {
+				return
+			}
+
+			return {
+				diff: mintDiff,
+				idx: mintIdx
+			}
+		}
+
+	},
 	mounted() {
-
-		// let largestDiff = 0;
-		// let largestDiffIndex = 0;
-		// const diffs = {}
-
-
-		const mintDiff = {};
-		const mintIdx = {};
-
-		for (let i = 0; i < this.txn.meta.postTokenBalances.length; i++) {
-			if (this.txn.meta.postTokenBalances[i].owner !== this.$route.params.id)
-				continue
-
-			const b = this.txn.meta.postTokenBalances[i]
-			mintDiff[b.mint] = b.uiTokenAmount.uiAmount
-			mintIdx[b.mint] = b
-		}
-
-		for (let i = 0; i < this.txn.meta.preTokenBalances.length; i++) {
-			if (this.txn.meta.preTokenBalances[i].owner !== this.$route.params.id)
-				continue
-
-			const b = this.txn.meta.preTokenBalances[i]
-			mintIdx[b.mint] = b
-			mintDiff[b.mint] -= b.uiTokenAmount.uiAmount
-			if (mintDiff[b.mint] === 0)
-				delete mintDiff[b.mint]
-		}
-
-		if (Object.keys(mintDiff).length === 0) {
+		if (this.diff !== -1) {
+			this.tokenChange = {
+				mint: this.txn.mint,
+			}
+			this.balanceChange = {
+				diff: this.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
+			};
 			return
 		}
 
-		// console.log("mintDiff", mintDiff)
+		const r = this.calculateTxnProfit()
+		const ok = Object.keys(r.diff)[0]
+		const val = Object.values(r.diff)[0]
 
-		const ok = Object.keys(mintDiff)[0]
-		const val = Object.values(mintDiff)[0]
-
-		this.tokenChange = mintIdx[ok]
+		this.tokenChange = r.idx[ok]
 		this.balanceChange = {
 			diff: val,
-			// humanDiff: val.toFixed(this.tokenChange.uiTokenAmount.decimals),
 		};
 	}
 }

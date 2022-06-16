@@ -314,6 +314,10 @@ html, body {
     color: #46CE7C;
 }
 
+.grey {
+    color: #8C8C8C;
+}
+
 .text-right {
     text-align: right;
 }

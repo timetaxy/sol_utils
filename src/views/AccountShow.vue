@@ -1,7 +1,7 @@
 <template>
 	<div class="container">
 		<div class="col-12 mt-3">
-			<OverviewCard :prices="prices"></OverviewCard>
+			<OverviewCard :token-info="tokenInfo" :prices="prices"></OverviewCard>
 		</div>
 
 
@@ -52,23 +52,23 @@ export default {
 		this.txnManager = new TransactionManager()
 		this.userAsset = new UserTokens();
 
-		this.tokenInfo[this.$route.params.id] = {
+		const solNative = {
 			logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
 			name: "Solana (Native)",
+			symbol: "SOL",
 			decimals: 9,
 		}
 
-		this.tokenInfo["1111111111111111111111111111111111111111111"] = {
-			logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
-			name: "Solana (Native)",
-			decimals: 9,
-		}
+		this.tokenInfo[this.$route.params.id] = solNative;
+		this.tokenInfo["1111111111111111111111111111111111111111111"] = solNative
+		this.tokenInfo["11111111111111111111111111111111"] = solNative
 	},
 	mounted() {
 		this.userAsset.getTokenPrices().then(r => {
 			const sol = r.data["So11111111111111111111111111111111111111112"]
 			r.data[this.$route.params.id] = sol //SOL native
 			r.data["1111111111111111111111111111111111111111111"] = sol //SOL native
+			r.data["11111111111111111111111111111111"] = sol //SOL native
 
 			this.prices = r.data
 		})
@@ -76,12 +76,15 @@ export default {
 		this.userAsset.getTokenInfo().then((r) => {
 			console.log("Token info", r.data)
 
-			for (let token of r.data) {
+			for (let token of r.data.tokens) {
 				this.tokenInfo[token.address] = token
 			}
 		})
 
 		this.txnManager.get(this.$route.params.id);
+	},
+	beforeDestroy() {
+		this.txnManager.stop();
 	},
 }
 </script>

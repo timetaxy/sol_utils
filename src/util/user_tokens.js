@@ -48,6 +48,7 @@ export class UserTokens {
 	}
 
 	getTokenInfo() {
-		return axios.get("https://cache.jup.ag/tokens")
+		return axios.get("https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json")
+		// return axios.get("https://cache.jup.ag/tokens")
 	}
 }

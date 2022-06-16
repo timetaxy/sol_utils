@@ -4,6 +4,11 @@ import Arberling from "../api/arberling";
 export class TransactionManager {
 	transactions = [];
 
+	//Amount of txns to poll up to
+	pollLimit = 1000;
+
+	loading = false;
+
 	summary = {
 		failed: 0,
 		success: 0,
@@ -18,6 +23,10 @@ export class TransactionManager {
 			amountMade: 0,
 			gas: 0,
 		}
+	}
+
+	stop() {
+		this.loading = false;
 	}
 
 	initSummary(mintAddr) {
@@ -84,14 +93,16 @@ export class TransactionManager {
 		);
 	}
 
-	async get(id) {
-		let signatures = await this.getTxns(id);
+	async get(id, before = null) {
+		this.loading = true;
+		let signatures = await this.getTxns(id, before)
 
-		while (signatures.length === 1000 && this.transactions.length < 1000) {
+		while (signatures.length === 1000 && this.transactions.length < this.pollLimit && this.loading) {
 			signatures = await this.getTxns(id, signatures[signatures.length - 1].signature)
 			// console.log(`Txns`, this.transactions.length, signatures[signatures.length - 1].signature)
 		}
 
+		this.loading = false;
 		console.log("Summary", this.summary)
 		console.log("Trade Summary", this.tradeSummary)
 	}
@@ -195,8 +206,12 @@ export class TransactionManager {
 		}
 	}
 
+	/**
+	 * Allocate 4MB for transactions
+	 * @returns {boolean}
+	 */
 	isLocalStorageFull() {
-		return 1024 * 1024 * 5 - unescape(encodeURIComponent(JSON.stringify(localStorage))).length < 0
+		return ((1024 * 1024 * 4)) - unescape(encodeURIComponent(JSON.stringify(localStorage))).length < 0
 	}
 
 	//RPC

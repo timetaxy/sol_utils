@@ -11,6 +11,16 @@
 					</div>
 				</form>
 
+				<div class="row text-white mt-3">
+					<div class="card">
+						<div class="card-body p-1">
+							<div v-for="(search, key) in recentSearches" :key="key">
+								<div class="recent-search p-2 my-2" @click="go(search)">{{search}}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 
 		</div>
@@ -24,17 +34,46 @@ export default {
 		return {
 			form: {
 				search: '',
-			}
+			},
+			recentSearches: [],
 		}
 	},
 	methods: {
+		go: function(search) {
+			this.form.search = search;
+			this.pushSearch(this.form.search)
+			this.$router.push(`/account/${this.form.search}`)
+		},
+
 		searchAddress: function (e) {
 			e.preventDefault()
 
+			this.pushSearch(this.form.search)
 			this.$router.push(`/account/${this.form.search}`)
+		},
 
+		pushSearch: function(search) {
+			const recent = this.getRecentSearches()
+			if (recent.includes(search)) {
+				return
+			}
 
+			recent.push(search)
+			localStorage.setItem("recentSearches", JSON.stringify(recent))
+		},
+
+		getRecentSearches: function(){
+			let recent = localStorage.getItem("recentSearches")
+			if (recent === null)
+				recent = []
+			else
+				recent = JSON.parse(recent)
+
+			return recent
 		}
+	},
+	mounted() {
+		this.recentSearches = this.getRecentSearches()
 	}
 }
 </script>
@@ -42,5 +81,14 @@ export default {
 <style scoped>
 .mt25 {
 	margin-top: 20%;
+}
+
+.recent-search {
+	border-radius: 7px;
+	cursor: pointer;
+}
+
+.recent-search:hover {
+	background: rgba(255, 255, 255, 0.1);
 }
 </style>
