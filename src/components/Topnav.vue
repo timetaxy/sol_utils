@@ -11,10 +11,6 @@
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 					<li class="nav-item active">
-						<router-link to="/" class="nav-link text-uppercase" href="#"><i class="fa fa-floppy-disk"></i> Drive <span class="sr-only">(current)</span>
-						</router-link>
-					</li>
-					<li class="nav-item active">
 						<router-link to="/" class="nav-link text-uppercase" href="#"><i class="fa fa-search"></i> Explorer <span class="sr-only">(current)</span>
 						</router-link>
 					</li>
