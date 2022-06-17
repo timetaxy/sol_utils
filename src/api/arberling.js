@@ -2,7 +2,8 @@ import axios from 'axios';
 
 export class Arberling {
 
-	base = 'http://localhost:9093';
+	// base = 'http://localhost:9093';
+	base = 'https://arb-dashboard.alphabatem.com';
 
 	constructor() {
 		//
