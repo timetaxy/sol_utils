@@ -5,7 +5,7 @@ export class TransactionManager {
 	transactions = [];
 
 	//Amount of txns to poll up to
-	pollLimit = 1000;
+	pollLimit = 5; //(5*1000)
 
 	loading = false;
 
@@ -95,11 +95,13 @@ export class TransactionManager {
 
 	async get(id, before = null) {
 		this.loading = true;
+		let idx = 1;
 		let signatures = await this.getTxns(id, before)
 
-		while (signatures.length === 1000 && this.transactions.length < this.pollLimit && this.loading) {
+		while (signatures.length === 1000 && idx < this.pollLimit && this.loading) {
 			signatures = await this.getTxns(id, signatures[signatures.length - 1].signature)
 			// console.log(`Txns`, this.transactions.length, signatures[signatures.length - 1].signature)
+			idx++;
 		}
 
 		this.loading = false;

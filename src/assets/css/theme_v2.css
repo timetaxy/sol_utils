@@ -521,3 +521,65 @@ table tr {
  background-color: rgba(0,0,0, 0.9);
     color: #0a9fb9;
 }
+
+
+.btn-checkbox {
+    font-family: monospace;
+    position: relative;
+    border: 1px solid var(--bs-primary);
+    border-radius: 3px;
+    color: white;
+    font-size: 0.8rem;
+    transition: all 0.6s ease-in-out;
+}
+
+.btn-checkbox:focus, .btn-checkbox:active {
+    box-shadow: none;
+}
+
+.btn-checkbox:disabled {
+    border: 1px solid var(--bs-secondary);
+}
+
+.btn-checkbox.active {
+    border: 1px solid var(--bs-primary);
+    border-radius: 3px;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.btn-checkbox span {
+    position: relative;
+    color: #fff;
+    z-index: 2;
+}
+
+.btn-checkbox:after{
+    position: absolute;
+    content: "";
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: var(--bs-primary);
+    transition: all .35s;
+}
+
+.btn-checkbox:not(.active):after{
+    width: 0;
+}
+
+.btn-checkbox.active:after{
+    width: 100%;
+}
+
+
+.loading-screen {
+    max-height: 0;
+    transition: all 2s ease-in-out;
+    overflow: hidden;
+}
+
+.loading-screen.active {
+    max-height: 1000px;
+}

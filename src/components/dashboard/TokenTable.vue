@@ -38,6 +38,14 @@ export default {
 		//
 	},
 	props: {
+		hideDust: {
+			type: Boolean,
+			default: false,
+		},
+		hideEmpty: {
+			type: Boolean,
+			default: false,
+		},
 		tokenInfo: {
 			type: Object,
 			required: true,
@@ -53,7 +61,7 @@ export default {
 	},
 	data() {
 		return {
-			numFormatter:new Intl.NumberFormat('en-US', {
+			numFormatter: new Intl.NumberFormat('en-US', {
 				style: 'currency',
 				currency: 'USD',
 			}),
@@ -62,7 +70,17 @@ export default {
 	},
 	computed: {
 		filteredTokens: function () {
-			return this.tokens.filter(token => token.amount.amount > 0).sort((a, b) => b.amount.amount - a.amount.amount);
+			return this.tokens.filter(token => {
+				if (this.hideDust && token.amount.amount < (Math.pow(10, token.amount.decimals)))
+					return false;
+
+				if (token.amount.amount > 0)
+					return true
+
+
+				return !this.hideEmpty;
+			}).sort((a, b) => b.amount.amount -
+					a.amount.amount);
 		}
 	},
 	beforeMount() {

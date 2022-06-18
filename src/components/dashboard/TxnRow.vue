@@ -11,7 +11,7 @@
 		<td>{{ gasFee }}
 			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
-		<td :class="colorStyle">{{ amountSign }}{{ balanceChange.diff.toFixed(tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].decimals : 9) }}</td>
+		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
 		<td>
 			<SHDW :mint-addr="tokenChange.mint" class="small"></SHDW>
 			{{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}
@@ -71,6 +71,13 @@ export default {
 		}
 	},
 	computed: {
+		txnBalanceChange: function() {
+			if (!this.balanceChange.diff)
+				return -1;
+
+			return this.balanceChange.diff.toFixed(this.tokenInfo[this.tokenChange.mint] ? this.tokenInfo[this.tokenChange.mint].decimals : 9)
+		},
+
 		gasFee: function () {
 			return this.txn.meta.fee / LAMPORTS_PER_SOL;
 		},
