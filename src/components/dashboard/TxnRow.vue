@@ -109,71 +109,6 @@ export default {
 	},
 	methods: {
 
-		calculateTxnProfit: function () {
-			const mintDiff = {};
-			const mintIdx = {};
-
-			for (let i = 0; i < this.txn.meta.postTokenBalances.length; i++) {
-				if (this.txn.meta.postTokenBalances[i].owner !== this.$route.params.id)
-					continue
-
-				const b = this.txn.meta.postTokenBalances[i]
-				mintDiff[b.mint] = b.uiTokenAmount.uiAmount
-				mintIdx[b.mint] = b
-			}
-
-			for (let i = 0; i < this.txn.meta.preTokenBalances.length; i++) {
-				if (this.txn.meta.preTokenBalances[i].owner !== this.$route.params.id)
-					continue
-
-				const b = this.txn.meta.preTokenBalances[i]
-				mintIdx[b.mint] = b
-				mintDiff[b.mint] -= b.uiTokenAmount.uiAmount
-				if (mintDiff[b.mint] === 0)
-					delete mintDiff[b.mint]
-			}
-
-
-			const tokenAddr = this.$route.params.id;
-			let ownerIdx = -1;
-			for (let i = 0; i < this.txn.transaction.message.accountKeys; i++) {
-				console.log("ACC", this.txn.transaction.message.accountKeys[i])
-				if (tokenAddr === this.txn.transaction.message.accountKeys[i]) {
-					ownerIdx = i;
-					console.log("OwnerIdx", ownerIdx)
-					break
-				}
-			}
-
-			if (ownerIdx > -1) {
-				console.log("ownerIdx", ownerIdx)
-				const preSol = this.txn.meta.preBalances[ownerIdx]
-				const postSol = this.txn.meta.postBalances[ownerIdx]
-				const diff = postSol - preSol
-				if (diff !== -this.txn.meta.fee) {
-					mintDiff["11111111111111111111111111111111"] = diff
-					mintIdx["11111111111111111111111111111111"] = {
-						Owner: tokenAddr,
-						Mint: "11111111111111111111111111111111",
-					}
-				}
-
-			}
-
-			if (Object.keys(mintDiff).length === 0) {
-				return {
-					mint: "",
-					diff: 0,
-					idx: -1,
-				}
-			}
-
-			return {
-				diff: mintDiff,
-				idx: mintIdx
-			}
-		}
-
 	},
 	mounted() {
 
@@ -181,24 +116,6 @@ export default {
 		this.balanceChange = {
 			diff: this.txn.diff / Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
 		}
-		// if (this.diff !== -1) {
-		// 	this.tokenChange = {
-		// 		mint: this.txn.mint,
-		// 	}
-		// 	this.balanceChange = {
-		// 		diff: this.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
-		// 	};
-		// 	return
-		// }
-		//
-		// const r = this.calculateTxnProfit()
-		// const ok = Object.keys(r.diff)[0]
-		// const val = Object.values(r.diff)[0]
-		//
-		// this.tokenChange = r.idx[ok]
-		// this.balanceChange = {
-		// 	diff: val,
-		// };
 	}
 }
 </script>

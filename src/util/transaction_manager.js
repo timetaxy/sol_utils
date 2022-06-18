@@ -165,7 +165,7 @@ export class TransactionManager {
 		const mintDiff = {};
 		const mintIdx = {};
 
-		console.log("Calculating profit", txn, tokenAddr)
+		console.log("Calculating profit", txn.signature, tokenAddr)
 		for (let i = 0; i < txn.meta.postTokenBalances.length; i++) {
 			if (txn.meta.postTokenBalances[i].owner !== tokenAddr)
 				continue
@@ -190,7 +190,6 @@ export class TransactionManager {
 
 		let ownerIdx = -1;
 		for(let i = 0; i < txn.transaction.message.accountKeys.length; i++) {
-			console.log("ACC",txn.transaction.message.accountKeys[i])
 			if (tokenAddr === txn.transaction.message.accountKeys[i]) {
 				ownerIdx = i;
 				break
@@ -212,6 +211,7 @@ export class TransactionManager {
 		}
 
 		if (Object.keys(mintDiff).length === 0) {
+			console.log("No profit", txn.signature, tokenAddr)
 			return [Object.assign(txn,{
 				token: '',
 				mint: '',
@@ -227,14 +227,16 @@ export class TransactionManager {
 		for(let i = 0; i < ok.length; i++) {
 			const mint = ok[i]
 			const diff = mintDiff[mint]
-			trades.push(Object.assign(txn, {
+			trades.push(Object.assign({
 				token: mint,
 				mint: mint,
 				gas: i === 0 ? txn.meta.fee : 0,
 				diff: parseInt(diff),
-			}));
+			}, txn));
 		}
 
+		console.log("ok", ok)
+		console.log("Trades", txn.signature, trades)
 		return trades;
 	}
 
