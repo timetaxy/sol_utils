@@ -2,7 +2,7 @@
 	<tr>
 		<td>
 			<a target="_blank" :href="`https://solscan.io/tx/${txn.signature}`">
-				<i v-if="txn.err === null" class="fa fa-eye d-none d-md-inline-block"></i>
+				<i v-if="txn.err === null || !txn.error" class="fa fa-eye d-none d-md-inline-block"></i>
 				<i v-else class="fa fa-eye-slash red d-none d-md-inline-block"></i>
 				<span class="small ms-3">{{ txn.signature.substr(0, 12) }}...</span></a>
 		</td>
