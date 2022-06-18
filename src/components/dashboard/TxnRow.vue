@@ -1,20 +1,20 @@
 <template>
 	<tr>
-		<td>
+		<td class="d-none d-md-table-cell">
 			<a target="_blank" :href="`https://solscan.io/tx/${txn.signature}`">
 				<i v-if="txn.err === null" class="fa fa-eye"></i>
 				<i v-else class="fa fa-eye-slash red"></i>
 				<span class="small ms-3">{{ txn.signature.substr(0, 20) }}...</span></a>
 		</td>
 		<td><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
-		<td>{{ humanTime }}</td>
-		<td>{{ gasFee }}
+		<td class="d-none d-lg-table-cell">{{ humanTime }}</td>
+		<td class="d-none d-lg-table-cell">{{ gasFee }}
 			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
 		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
 		<td>
 			<SHDW :mint-addr="tokenChange.mint" class="small"></SHDW>
-			{{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}
+			<span class="d-none d-inline-block">{{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}</span>
 		</td>
 		<td class="text-center">
 			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small"></SHDW>

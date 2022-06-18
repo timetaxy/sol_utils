@@ -3,25 +3,24 @@
 		<thead>
 		<tr>
 			<td>Symbol</td>
-			<td>Account</td>
+			<td class="d-none d-lg-table-cell">Account</td>
 			<td>Balance</td>
-			<td>Current Price</td>
+			<td class="d-none d-md-table-cell">Current Price</td>
 			<td>Value</td>
 		</tr>
 		</thead>
 		<tbody>
 		<tr v-for="(token,key) in filteredTokens" :key="key">
 			<td>
-
 				<img style="height: 1rem" v-if="tokenInfo[token.mint]" class="token-logo"
 						:src="tokenInfo[token.mint].logoURI" alt="">
 
 				{{ tokenInfo[token.mint] ? tokenInfo[token.mint].name : 'Unknown Token' }}
 			</td>
-			<td><a target="_blank"
+			<td class="d-none d-lg-table-cell"><a target="_blank"
 					:href="`https://solscan.io/account/${token.mint}`" class="small">{{ token.mint }}</a></td>
 			<td>{{ token.amount.uiAmountString }}</td>
-			<td>{{ prices[token.mint] ? numFormatter.format(prices[token.mint].value) : 0.0000 }}</td>
+			<td class="d-none d-md-table-cell">{{ prices[token.mint] ? numFormatter.format(prices[token.mint].value) : 0.0000 }}</td>
 			<td>{{ prices[token.mint] ? numFormatter.format((prices[token.mint].value * token.amount.uiAmount)) : 0.00 }}</td>
 		</tr>
 		</tbody>

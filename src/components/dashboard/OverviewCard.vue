@@ -18,28 +18,28 @@
 		</div>
 
 		<div class="mt-4 row text-center" v-if="summary.successful_trades > 0">
-			<div class="col-3">
+			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Transactions</h2>
 					<h1>{{ summary.failed_trades + summary.successful_trades }}
 					</h1>
 				</StatCard>
 			</div>
-			<div class="col-3">
+			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Success <small class="xsmall grey">{{ ((summary.failed_trades + summary.successful_trades) / summary.successful_trades).toFixed(2) }}%</small></h2>
 					<h1>{{ summary.successful_trades }}
 					</h1>
 				</StatCard>
 			</div>
-			<div class="col-3">
+			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Profit</h2>
 					<h1>{{ numFormatter.format(totalProfit / 1000000000) }}
 					</h1>
 				</StatCard>
 			</div>
-			<div class="col-3">
+			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Gas Spend
 						<small class="xsmall grey">
@@ -54,7 +54,7 @@
 
 		<div class="col-12 mt-3">
 			<div class="row">
-				<div class="col-1 text-center mb-2" v-for="(token,key) in filteredTokens" :key="key">
+				<div class="col-4 col-md-2 col-lg-1 text-center mb-2" v-for="(token,key) in filteredTokens" :key="key">
 					<div class="card h-100 token-card" v-on:click="setActiveToken(token)">
 						<div class="card-body p-0 pt-1 h-100">
 							<img style="max-height: 32px" v-if="tokenInfo[token.mint]" class="token-logo"
@@ -153,7 +153,7 @@ export default {
 	},
 	computed: {
 		gasCostSol: function () {
-			return this.summary.gas_spent / LAMPORTS_PER_SOL;
+			return (this.summary.gas_spent / LAMPORTS_PER_SOL).toFixed(4);
 		},
 		gasCostUsd: function () {
 			if (!this.prices['So11111111111111111111111111111111111111112'])

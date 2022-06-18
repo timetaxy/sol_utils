@@ -3,10 +3,10 @@
 		<table class="table table-hover">
 			<thead>
 			<tr>
-				<td>Signature</td>
+				<td class="d-none d-md-table-cell">Signature</td>
 				<td>Block</td>
-				<td>Time</td>
-				<td>Gas Cost</td>
+				<td class="d-none d-lg-table-cell">Time</td>
+				<td class="d-none d-lg-table-cell">Gas Cost</td>
 				<td>Change Amount</td>
 				<td>Token</td>
 				<td>Value <small>(today)</small></td>
