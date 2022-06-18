@@ -1,5 +1,5 @@
 <template>
-	<table class="table table-hover table-sm">
+	<table class="table table-hover">
 		<thead>
 		<tr>
 			<td>Symbol</td>
@@ -20,7 +20,7 @@
 			<td class="d-none d-lg-table-cell"><a target="_blank"
 					:href="`https://solscan.io/account/${token.mint}`" class="small">{{ token.mint }}</a></td>
 			<td>{{ token.amount.uiAmountString }}</td>
-			<td class="d-none d-md-table-cell">{{ prices[token.mint] ? numFormatter.format(prices[token.mint].value) : 0.0000 }}</td>
+			<td class="d-none d-md-table-cell">{{ prices[token.mint] ? numFormatter.format(prices[token.mint].value) : 0.00 }}</td>
 			<td>{{ prices[token.mint] ? numFormatter.format((prices[token.mint].value * token.amount.uiAmount)) : 0.00 }}</td>
 		</tr>
 		</tbody>
@@ -71,6 +71,9 @@ export default {
 		filteredTokens: function () {
 			return this.tokens.filter(token => {
 				if (this.hideDust && token.amount.amount < (Math.pow(10, token.amount.decimals)))
+					return false;
+
+				if (this.hideDust && !this.prices[token.mint])
 					return false;
 
 				if (token.amount.amount > 0)

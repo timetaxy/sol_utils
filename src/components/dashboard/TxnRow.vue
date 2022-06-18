@@ -1,23 +1,23 @@
 <template>
 	<tr>
-		<td class="d-none d-md-table-cell">
+		<td>
 			<a target="_blank" :href="`https://solscan.io/tx/${txn.signature}`">
-				<i v-if="txn.err === null" class="fa fa-eye"></i>
-				<i v-else class="fa fa-eye-slash red"></i>
-				<span class="small ms-3">{{ txn.signature.substr(0, 20) }}...</span></a>
+				<i v-if="txn.err === null" class="fa fa-eye d-none d-md-inline-block"></i>
+				<i v-else class="fa fa-eye-slash red d-none d-md-inline-block"></i>
+				<span class="small ms-3">{{ txn.signature.substr(0,12) }}...</span></a>
 		</td>
-		<td><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
+		<td class="d-none d-md-table-cell"><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
 		<td class="d-none d-lg-table-cell">{{ humanTime }}</td>
 		<td class="d-none d-lg-table-cell">{{ gasFee }}
 			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
 		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
-		<td>
+		<td class="text-center text-lg-start">
 			<SHDW :mint-addr="tokenChange.mint" class="small"></SHDW>
-			<span class="d-none d-inline-block">{{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}</span>
+			<span class="d-none d-md-inline-block"> {{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}</span>
 		</td>
-		<td class="text-center">
-			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small"></SHDW>
+		<td class="text-end">
+			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
 			{{ this.prices[tokenChange.mint] ? numFormatter.format((balanceChange.diff * this.prices[tokenChange.mint].value)) : 0 }}
 		</td>
 	</tr>
@@ -53,7 +53,7 @@ export default {
 	},
 	data() {
 		return {
-			numFormatter:new Intl.NumberFormat('en-US', {
+			numFormatter: new Intl.NumberFormat('en-US', {
 				style: 'currency',
 				currency: 'USD',
 				minimumFractionDigits: 3,
@@ -71,7 +71,7 @@ export default {
 		}
 	},
 	computed: {
-		txnBalanceChange: function() {
+		txnBalanceChange: function () {
 			if (!this.balanceChange.diff)
 				return 'None';
 
@@ -86,10 +86,10 @@ export default {
 			return this.balanceChange.diff > 0;
 		},
 
-		colorStyle: function() {
+		colorStyle: function () {
 			if (this.balanceChange.diff > 0) {
 				return 'green';
-			} else if(this.balanceChange.diff < 0) {
+			} else if (this.balanceChange.diff < 0) {
 				return 'red';
 			}
 
@@ -136,8 +136,8 @@ export default {
 
 			const tokenAddr = this.$route.params.id;
 			let ownerIdx = -1;
-			for(let i = 0; i < this.txn.transaction.message.accountKeys; i++) {
-				console.log("ACC",this.txn.transaction.message.accountKeys[i])
+			for (let i = 0; i < this.txn.transaction.message.accountKeys; i++) {
+				console.log("ACC", this.txn.transaction.message.accountKeys[i])
 				if (tokenAddr === this.txn.transaction.message.accountKeys[i]) {
 					ownerIdx = i;
 					console.log("OwnerIdx", ownerIdx)
@@ -179,7 +179,7 @@ export default {
 
 		this.tokenChange = this.txn
 		this.balanceChange = {
-			diff: this.txn.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
+			diff: this.txn.diff / Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
 		}
 		// if (this.diff !== -1) {
 		// 	this.tokenChange = {
