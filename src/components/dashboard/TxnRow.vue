@@ -12,11 +12,12 @@
 			<SHDW v-show="gasFee !== '-'" class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
 		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
-		<td class="text-center text-lg-start">
+		<td v-if="txn.err" colspan="2"></td>
+		<td v-if="!txn.err" class="text-center text-lg-start">
 			<SHDW :mint-addr="tokenChange.mint" class="small"></SHDW>
 			<span class="d-none d-md-inline-block"> {{ tokenInfo[tokenChange.mint] ? tokenInfo[tokenChange.mint].name : 'Unknown Token' }}</span>
 		</td>
-		<td class="text-end">
+		<td v-if="!txn.err" class="text-end">
 			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
 			{{ this.prices[tokenChange.mint] ? numFormatter.format((balanceChange.diff * this.prices[tokenChange.mint].value)) : 0 }}
 		</td>

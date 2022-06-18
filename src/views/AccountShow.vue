@@ -23,7 +23,6 @@
 
 		<div class="col-12 mt-3">
 			<StatCard>
-				<h3><i class="fa fa-arrow-right-arrow-left me-2"></i> TRANSACTIONS</h3>
 				<TxnTable :prices="prices" :mgr="txnManager" :token-info="tokenInfo" :ua="userAsset"></TxnTable>
 			</StatCard>
 		</div>

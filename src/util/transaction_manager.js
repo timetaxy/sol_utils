@@ -134,8 +134,20 @@ export class TransactionManager {
 
 			if (parsed.err === null)
 				this.addSummary(tokenAddr, parsed)
-			else
+			else {
 				this.addFailed()
+				this.trades.push({
+					...parsed,
+					...{
+						err: true,
+						token: '11111111111111111111111111111111',
+						mint: '11111111111111111111111111111111',
+						diff: 0,
+						gas: 5000,
+						meta: {fee: 5000}
+					}
+				})
+			}
 		}
 
 		return signatures
@@ -211,12 +223,17 @@ export class TransactionManager {
 
 		if (Object.keys(mintDiff).length === 0) {
 			console.log("No profit", txn.signature, tokenAddr)
-			return [Object.assign(txn, {
-				token: '',
-				mint: '',
-				diff: 0,
-				gas: txn.meta.fee,
-			})]
+			const t = {
+				...txn,
+				...{
+					err: true,
+					token: '',
+					mint: '',
+					diff: 0,
+					gas: txn.meta.fee,
+				}
+			}
+			return [t]
 		}
 
 

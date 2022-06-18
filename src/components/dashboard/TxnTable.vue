@@ -1,5 +1,22 @@
 <template>
 	<div>
+		<div class="row">
+			<div class="col">
+				<h3><i class="fa fa-arrow-right-arrow-left me-2"></i> TRANSACTIONS</h3>
+			</div>
+			<div class="col-auto">
+				<button class="btn btn-checkbox mx-2 btn-sm" :class="!showErrors ? 'active' : ''"
+						v-on:click="showErrors = !showErrors"><span>ERRORS {{ showErrors ? 'SHOWN' : 'HIDDEN' }}</span></button>
+			</div>
+			<div class="col-2">
+				<select v-model="limit" class="form-control form-control-sm">
+					<option :value="10">10</option>
+					<option :value="25">25</option>
+					<option :value="50">50</option>
+					<option :value="100">100</option>
+				</select>
+			</div>
+		</div>
 		<table class="table table-hover">
 			<thead>
 			<tr>
@@ -13,7 +30,7 @@
 			</tr>
 			</thead>
 			<tbody v-if="this.mgr !== null">
-			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices"></TxnRow>
+			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${showErrors}-${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices"></TxnRow>
 			</tbody>
 		</table>
 		<div class="row">
@@ -57,6 +74,7 @@ export default {
 	},
 	data() {
 		return {
+			showErrors: true,
 			page: 0,
 			limit: 10,
 		}
@@ -71,6 +89,9 @@ export default {
 		},
 
 		filteredTransactions: function () {
+			if (this.showErrors)
+				return this.mgr.trades.slice(this.page * this.limit, this.page * this.limit + this.limit);
+
 			return this.mgr.trades.filter(txn => txn.err === null).slice(this.page * this.limit, this.page * this.limit + this.limit);
 		}
 	},
