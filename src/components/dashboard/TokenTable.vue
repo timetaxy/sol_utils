@@ -21,9 +21,18 @@
 					:href="`https://solscan.io/account/${token.mint}`" class="small">{{ token.mint }}</a></td>
 			<td>{{ token.amount.uiAmountString }}</td>
 			<td class="d-none d-md-table-cell">{{ prices[token.mint] ? numFormatter.format(prices[token.mint].value) : 0.00 }}</td>
-			<td>{{ prices[token.mint] ? numFormatter.format((prices[token.mint].value * token.amount.uiAmount)) : 0.00 }}</td>
+			<td class="text-end">{{ prices[token.mint] ? numFormatter.format((prices[token.mint].value * token.amount.uiAmount)) : 0.00 }}</td>
 		</tr>
 		</tbody>
+		<tfoot>
+			<tr>
+				<td><strong>TOTAL</strong></td>
+				<td class="d-none d-lg-table-cell"></td>
+				<td></td>
+				<td class="d-none d-md-table-cell"></td>
+				<td class="float-end">{{numFormatter.format(filteredTotal)}}</td>
+			</tr>
+		</tfoot>
 	</table>
 </template>
 
@@ -68,6 +77,14 @@ export default {
 		}
 	},
 	computed: {
+		filteredTotal: function() {
+			let total = 0;
+			for (let token of this.tokens) {
+				total += this.prices[token.mint] ? this.prices[token.mint].value * token.amount.uiAmount : 0.00;
+			}
+			return total;
+		},
+
 		filteredTokens: function () {
 			return this.tokens.filter(token => {
 				if (this.hideDust && token.amount.amount < (Math.pow(10, token.amount.decimals-4)))

@@ -572,3 +572,21 @@ table tr {
 .btn-checkbox.active:after{
     width: 100%;
 }
+
+.card-footer {
+    border-top: 0;
+}
+
+.token-card.active {
+    box-shadow: 0 0 5px #0a9fb9;
+    border: 1px solid var(--bs-primary);
+    filter: brightness(1);
+}
+
+.token-card:hover {
+    filter: brightness(1.1);
+}
+
+.token-card {
+    filter: brightness(0.4);
+}

@@ -21,14 +21,14 @@
 			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Transactions</h2>
-					<h1>{{ summary.failed_trades + summary.successful_trades }}
+					<h1>{{ simpleFormatter.format(summary.failed_trades + summary.successful_trades) }}
 					</h1>
 				</StatCard>
 			</div>
 			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
 					<h2 class="text-left">Success <small class="xsmall grey">{{ ((summary.failed_trades + summary.successful_trades) / summary.successful_trades).toFixed(2) }}%</small></h2>
-					<h1>{{ summary.successful_trades }}
+					<h1>{{ simpleFormatter.format(summary.successful_trades) }}
 					</h1>
 				</StatCard>
 			</div>
@@ -55,14 +55,16 @@
 		<div class="col-12 mt-3">
 			<div class="row">
 				<div class="col-4 col-md-2 col-lg-1 text-center mb-2" v-for="(token,key) in filteredTokens" :key="key">
-					<div class="card h-100 token-card" v-on:click="setActiveToken(token)">
+					<div class="card h-100 token-card" :class="activeTokenSummary.mint === token.mint ? 'active':''" v-on:click="setActiveToken(token)">
 						<div class="card-body p-0 pt-1 h-100">
 							<img style="max-height: 32px" v-if="tokenInfo[token.mint]" class="token-logo"
 									:src="tokenInfo[token.mint].logoURI" alt="">
 							<div v-else style="font-size: 0.4em">{{ token.mint }}</div>
 						</div>
 						<div class="card-footer p-0">
-							<span style="font-size: 0.8em">{{ prices[token.mint] ? prices[token.mint].symbol : token.mint.substr(0, 4) }} <small>({{ token.trade_summary.length }})</small></span>
+							<span style="font-size: 0.8em">{{
+									prices[token.mint] ? prices[token.mint].symbol : token.mint.substr(0, 4)
+								}} <small>({{ simpleFormatter.format(token.trade_summary.length) }})</small></span>
 						</div>
 					</div>
 				</div>
@@ -70,10 +72,21 @@
 		</div>
 
 
-
 		<div class="col-12 mt-3">
 			<StatCard>
-				<h4>GRAPH</h4>
+				<div class="row">
+					<div class="col-auto">
+						<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo"
+								:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
+					</div>
+					<div class="col">
+						<h4>{{ tokenInfo[activeTokenSummary.mint].name }}</h4>
+					</div>
+					<div class="col-auto small">
+						<p class="mb-0 small">Current Price: {{ prices[activeTokenSummary.mint] ? numFormatter.format(prices[activeTokenSummary.mint].value) : '-' }}</p>
+						<p class="mb-0 small">Running Total: {{ simpleFormatter.format(activeTokenSummary.amount_made / 1000000000 || 0) }}</p>
+					</div>
+				</div>
 				<TokenGraph :active-token="activeTokenSummary.mint" :summary="summary"></TokenGraph>
 			</StatCard>
 		</div>
@@ -96,13 +109,24 @@
 								<td class="d-none d-lg-table-cell">Gas Cost</td>
 								<td>Change</td>
 								<td>Token</td>
-								<td class="text-end">Value <small>(today)</small></td>
+								<td class="text-end">Value</td>
 							</tr>
 							</thead>
 							<tbody>
 							<TxnRow :diff="trade.diff" :prices="prices" :token-info="tokenInfo" :txn="adapted(trade)" v-for="(trade, key) in filteredTradeSummary"
 									:key="`${activeTokenSummary.mint}-${key}`"></TxnRow>
 							</tbody>
+							<tfoot>
+							<tr>
+								<td><strong>TOTAL</strong></td>
+								<td class="d-none d-md-table-cell"></td>
+								<td class="d-none d-lg-table-cell"></td>
+								<td class="d-none d-lg-table-cell"></td>
+								<td></td>
+								<td></td>
+								<td class="text-end">{{ numFormatter.format(tradeProfit) }}</td>
+							</tr>
+							</tfoot>
 						</table>
 					</div>
 				</div>
@@ -143,9 +167,11 @@ export default {
 			limit: 25,
 
 			activeTokenSummary: {
+				amount_made: 0,
 				mint: "11111111111111111111111111111111",
 				trade_summary: [],
 			},
+			simpleFormatter: new Intl.NumberFormat("en-US", {}),
 			numFormatter: new Intl.NumberFormat('en-US', {
 				style: 'currency',
 				currency: 'USD',
@@ -178,6 +204,12 @@ export default {
 			}
 
 			return filtered;
+		},
+
+		tradeProfit() {
+			const tradePrice = this.prices[this.activeTokenSummary.mint] ? this.prices[this.activeTokenSummary.mint].value : 0;
+			const amount = this.activeTokenSummary.amount_made * tradePrice;
+			return amount / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9);
 		},
 
 		totalProfit() {

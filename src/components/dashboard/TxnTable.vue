@@ -26,7 +26,7 @@
 				<td class="d-none d-lg-table-cell">Gas Cost</td>
 				<td>Change</td>
 				<td>Token</td>
-				<td class="text-end">Value <small>(today)</small></td>
+				<td class="text-end">Value</td>
 			</tr>
 			</thead>
 			<tbody v-if="this.mgr !== null">
@@ -74,7 +74,7 @@ export default {
 	},
 	data() {
 		return {
-			showErrors: true,
+			showErrors: false,
 			page: 0,
 			limit: 10,
 		}

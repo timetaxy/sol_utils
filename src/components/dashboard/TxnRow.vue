@@ -113,10 +113,9 @@ export default {
 	},
 	methods: {},
 	mounted() {
-
 		this.tokenChange = this.txn
 		this.balanceChange = {
-			diff: this.txn.diff / Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
+			diff: this.txn.diff / Math.pow(10, this.tokenInfo[this.txn.mint] ? this.tokenInfo[this.txn.mint].decimals : 9),
 		}
 	}
 }
