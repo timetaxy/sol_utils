@@ -49,7 +49,7 @@ export default {
 			userAsset: null,
 			txnManager: null,
 			tokenInfo: {},
-			hideDust: false,
+			hideDust: true,
 			hideEmpty: true,
 
 			summary: {

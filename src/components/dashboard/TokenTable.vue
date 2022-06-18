@@ -70,7 +70,7 @@ export default {
 	computed: {
 		filteredTokens: function () {
 			return this.tokens.filter(token => {
-				if (this.hideDust && token.amount.amount < (Math.pow(10, token.amount.decimals)))
+				if (this.hideDust && token.amount.amount < (Math.pow(10, token.amount.decimals-4)))
 					return false;
 
 				if (this.hideDust && !this.prices[token.mint])

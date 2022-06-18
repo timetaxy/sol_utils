@@ -124,6 +124,9 @@ export default {
 					splitLine: {
 						show: false
 					},
+					axisLine: { onZero: false },
+					min: 'dataMin',
+					max: 'dataMax',
 				},
 				dataZoom: [
 					{
