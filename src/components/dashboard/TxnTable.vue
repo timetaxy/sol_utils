@@ -63,7 +63,7 @@ export default {
 	},
 	computed: {
 		canGoNext: function () {
-			return this.mgr.transactions.filter(txn => txn.err === null).length > (this.page * this.limit) + this.limit
+			return this.mgr.trades.filter(txn => txn.err === null).length > (this.page * this.limit) + this.limit
 		},
 
 		canLoadMore: function() {
@@ -71,13 +71,13 @@ export default {
 		},
 
 		filteredTransactions: function () {
-			return this.mgr.transactions.filter(txn => txn.err === null).slice(this.page * this.limit, this.page * this.limit + this.limit);
+			return this.mgr.trades.filter(txn => txn.err === null).slice(this.page * this.limit, this.page * this.limit + this.limit);
 		}
 	},
 	methods: {
 		loadMore: function() {
 			this.mgr.pollLimit += 1000
-			const lastTxn = this.mgr.transactions[this.mgr.transactions.length - 1]
+			const lastTxn = this.mgr.trades[this.mgr.trades.length - 1]
 			this.mgr.get(this.$route.params.id, lastTxn.signature)
 		}
 	},

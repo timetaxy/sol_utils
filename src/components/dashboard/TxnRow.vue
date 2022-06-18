@@ -6,7 +6,7 @@
 				<i v-else class="fa fa-eye-slash red"></i>
 				<span class="small ms-3">{{ txn.signature.substr(0, 20) }}...</span></a>
 		</td>
-		<td><a :href="`https://solscan.io/block/${txn.blockTime}`">#{{ txn.blockTime }}</a></td>
+		<td><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
 		<td>{{ humanTime }}</td>
 		<td>{{ gasFee }}
 			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
@@ -73,7 +73,7 @@ export default {
 	computed: {
 		txnBalanceChange: function() {
 			if (!this.balanceChange.diff)
-				return -1;
+				return 'None';
 
 			return this.balanceChange.diff.toFixed(this.tokenInfo[this.tokenChange.mint] ? this.tokenInfo[this.tokenChange.mint].decimals : 9)
 		},
@@ -97,7 +97,7 @@ export default {
 		},
 
 		humanTime: function () {
-			return moment.unix(this.txn.blockTime).fromNow();
+			return moment.unix((this.txn.block_time || this.txn.blockTime)).fromNow();
 		},
 
 		amountSign: function () {
@@ -133,8 +133,39 @@ export default {
 					delete mintDiff[b.mint]
 			}
 
+
+			const tokenAddr = this.$route.params.id;
+			let ownerIdx = -1;
+			for(let i = 0; i < this.txn.transaction.message.accountKeys; i++) {
+				console.log("ACC",this.txn.transaction.message.accountKeys[i])
+				if (tokenAddr === this.txn.transaction.message.accountKeys[i]) {
+					ownerIdx = i;
+					console.log("OwnerIdx", ownerIdx)
+					break
+				}
+			}
+
+			if (ownerIdx > -1) {
+				console.log("ownerIdx", ownerIdx)
+				const preSol = this.txn.meta.preBalances[ownerIdx]
+				const postSol = this.txn.meta.postBalances[ownerIdx]
+				const diff = postSol - preSol
+				if (diff !== -this.txn.meta.fee) {
+					mintDiff["11111111111111111111111111111111"] = diff
+					mintIdx["11111111111111111111111111111111"] = {
+						Owner: tokenAddr,
+						Mint: "11111111111111111111111111111111",
+					}
+				}
+
+			}
+
 			if (Object.keys(mintDiff).length === 0) {
-				return
+				return {
+					mint: "",
+					diff: 0,
+					idx: -1,
+				}
 			}
 
 			return {
@@ -145,24 +176,29 @@ export default {
 
 	},
 	mounted() {
-		if (this.diff !== -1) {
-			this.tokenChange = {
-				mint: this.txn.mint,
-			}
-			this.balanceChange = {
-				diff: this.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
-			};
-			return
-		}
 
-		const r = this.calculateTxnProfit()
-		const ok = Object.keys(r.diff)[0]
-		const val = Object.values(r.diff)[0]
-
-		this.tokenChange = r.idx[ok]
+		this.tokenChange = this.txn
 		this.balanceChange = {
-			diff: val,
-		};
+			diff: this.txn.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
+		}
+		// if (this.diff !== -1) {
+		// 	this.tokenChange = {
+		// 		mint: this.txn.mint,
+		// 	}
+		// 	this.balanceChange = {
+		// 		diff: this.diff/Math.pow(10, this.tokenInfo[this.txn.mint].decimals),
+		// 	};
+		// 	return
+		// }
+		//
+		// const r = this.calculateTxnProfit()
+		// const ok = Object.keys(r.diff)[0]
+		// const val = Object.values(r.diff)[0]
+		//
+		// this.tokenChange = r.idx[ok]
+		// this.balanceChange = {
+		// 	diff: val,
+		// };
 	}
 }
 </script>

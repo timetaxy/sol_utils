@@ -1,24 +1,12 @@
 <template>
 	<div class="token-graph">
-		<div class="loading-screen" :class="summary.loading ? 'active' : ''">
-			<div class="row">
-				<div class="col text-center">
-					<div class="overview-loading-spinner mt-3">
-						<div class="spinner-border text-primary" role="status">
-						</div>
-					</div>
-				</div>
-				<div class="col-5">
-					<h6>Loading Account Summary</h6>
-					<p class="small">Summaries for accounts with large transaction history may take a while to generate until the account cache is warmed.</p>
-				</div>
-			</div>
-		</div>
-
-		<div v-if="!summary.loading">
+		<div v-if="!summary.loading && hasEnoughData">
 			<v-chart class="chart" :option="graphOptions"/>
 		</div>
 
+		<div v-if="!hasEnoughData" class="text-center">
+			<i class="grey small">Not enough data</i>
+		</div>
 
 	</div>
 </template>
@@ -27,7 +15,7 @@
 import {use} from "echarts/core";
 import {CanvasRenderer} from "echarts/renderers";
 import {LineChart} from "echarts/charts";
-import {GridComponent, TitleComponent, TooltipComponent,} from "echarts/components";
+import {DataZoomComponent, GridComponent, TitleComponent, TooltipComponent} from "echarts/components";
 import VChart from "vue-echarts";
 
 
@@ -37,6 +25,7 @@ use([
 	LineChart,
 	TitleComponent,
 	TooltipComponent,
+	DataZoomComponent
 ]);
 
 export default {
@@ -47,12 +36,26 @@ export default {
 			type: Object,
 			required: true,
 		},
+		activeToken: {
+			type: String,
+			default: function () {
+				return "11111111111111111111111111111111" //Sol Native
+			}
+		},
 	},
 	computed: {
+		hasEnoughData() {
+			if (!this.solData.data)
+				return false;
+
+			return this.solData.data.length > 2;
+		},
+
 		solData() {
 			const solAmountArr = [];
+			const gasAmountArr = [];
 			const labelArr = [];
-			const st = this.summary.tokens['So11111111111111111111111111111111111111112'];
+			const st = this.summary.tokens[this.activeToken];
 			if (!st)
 				return solAmountArr;
 
@@ -63,44 +66,46 @@ export default {
 			let largestLossIdx = 0;
 
 			let lastAmount = 0;
-			for (let i = 0; i < st.trade_summary.length; i++) {
-				if (st.trade_summary[i].diff > 4000000000 || st.trade_summary[i].diff < -1080000000)
-					continue
+			let lastGas = 0;
+			const sorted = st.trade_summary.sort((a, b) => {
+				return a.slot - b.slot;
+			});
 
-				// solAmountArr.push(st.trade_summary[i].diff);
-				solAmountArr.push(lastAmount + st.trade_summary[i].diff);
+			for (let i = 0; i < sorted.length; i++) {
+				solAmountArr.push(lastAmount + sorted[i].diff);
+				gasAmountArr.push(lastGas + sorted[i].gas);
 
-				labelArr.push(st.trade_summary[i].block);
-				lastAmount += st.trade_summary[i].diff;
+				// labelArr.push(new Date(sorted[i].block_time * 1000).toLocaleDateString());
+				labelArr.push(sorted[i].slot);
+				lastAmount += sorted[i].diff;
+				lastGas += sorted[i].gas;
 
-				if (st.trade_summary[i].diff > largestGainAmount) {
-					largestGainAmount = st.trade_summary[i].diff;
+				if (sorted[i].diff > largestGainAmount) {
+					largestGainAmount = sorted[i].diff;
 					largestGainIdx = i;
 				}
 
-				if (st.trade_summary[i].diff < largestLossAmount) {
-					largestLossAmount = st.trade_summary[i].diff;
+				if (sorted[i].diff < largestLossAmount) {
+					largestLossAmount = sorted[i].diff;
 					largestLossIdx = i;
 				}
-
 			}
 
 			return {
-				biggestGain: st.trade_summary[largestGainIdx],
-				biggestLoss: st.trade_summary[largestLossIdx],
+				biggestGain: sorted[largestGainIdx],
+				biggestLoss: sorted[largestLossIdx],
 				labels: labelArr,
 				data: solAmountArr,
+				gasData: gasAmountArr,
 			};
 		},
 
 		graphOptions() {
 			const solData = this.solData;
+			const offset = 0;
+			const limit = solData.data.length
+			console.log("solData", solData)
 
-			const limit = 801;
-			const offset = this.solData.data.length - limit;
-
-
-			console.log("Soldata", solData.data.slice(offset, offset + limit));
 			return {
 				id: "Block",
 				grid: {
@@ -108,7 +113,7 @@ export default {
 				},
 				xAxis: {
 					type: 'category',
-					data: solData.labels.slice(offset,offset + limit),
+					data: solData.labels.slice(offset, offset + limit),
 					boundaryGap: false,
 					splitLine: {
 						show: false
@@ -120,16 +125,36 @@ export default {
 						show: false
 					},
 				},
+				dataZoom: [
+					{
+						xAxisIndex: 0,
+					}
+				],
 				tooltip: {
-					trigger: "item",
-					formatter: "<strong>{a}</strong> <br/>{b} : {c}",
+					trigger: "axis",
+					axisPointer: {
+						type: 'cross',
+						label: {
+							backgroundColor: '#6a7985'
+						},
+					},
 					extraCssText: `background-color: rgba(0,0,0,0.2);color:#fff`,
 				},
 				series: [
+					// {
+					// 	name: "Gas Fees",
+					// 	type: "line",
+					// 	smooth: false,
+					// 	data: solData.gasData.slice(offset, offset + limit),
+					// 	areaStyle: {
+					// 		opacity: 0.8,
+					// 		color: '#46CE7C'
+					// 	},
+					// },
 					{
-						name: "Tokens",
+						name: this.activeToken,
 						type: "line",
-						smooth: true,
+						smooth: false,
 						lineStyle: {
 							// width: 0
 							color: '#fff'
@@ -137,12 +162,12 @@ export default {
 						itemStyle: {
 							color: '#fff'
 						},
-						data: solData.data.slice(offset,offset + limit),
+						data: solData.data.slice(offset, offset + limit),
 						areaStyle: {
 							opacity: 0.8,
 							color: '#46CE7C'
 						},
-					}
+					},
 				]
 			}
 		}
@@ -152,6 +177,6 @@ export default {
 
 <style scoped>
 .chart {
-	height: 500px;
+	height: 300px;
 }
 </style>

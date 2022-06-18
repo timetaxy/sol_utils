@@ -1,5 +1,22 @@
 <template>
 	<div class="overview">
+		<div class="loading-screen" :class="summary.loading ? 'active' : ''" v-show="summary.loading">
+			<StatCard>
+				<div class="row">
+					<div class="col text-center">
+						<div class="overview-loading-spinner mt-3">
+							<div class="spinner-border text-primary" role="status">
+							</div>
+						</div>
+					</div>
+					<div class="col-5">
+						<h6>Loading Account Summary</h6>
+						<p class="small">Summaries for accounts with large transaction history may take a while to generate until the account cache is warmed.</p>
+					</div>
+				</div>
+			</StatCard>
+		</div>
+
 		<div class="mt-4 row text-center" v-if="summary.successful_trades > 0">
 			<div class="col-3">
 				<StatCard>
@@ -50,7 +67,18 @@
 					</div>
 				</div>
 			</div>
+		</div>
 
+
+
+		<div class="col-12 mt-3">
+			<StatCard>
+				<h4>GRAPH</h4>
+				<TokenGraph :active-token="activeTokenSummary.mint" :summary="summary"></TokenGraph>
+			</StatCard>
+		</div>
+
+		<div class="col-12 mt-3">
 			<StatCard v-show="activeTokenSummary.trade_summary.length > 0">
 				<h4><img style="height: 1rem" v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo"
 						:src="tokenInfo[activeTokenSummary.mint].logoURI" alt=""> {{
@@ -88,10 +116,11 @@ import StatCard from "./StatCard";
 import SHDW from "../tokens/SHDW";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
 import TxnRow from "./TxnRow";
+import TokenGraph from "./TokenGraph";
 
 export default {
 	name: "OverviewCard",
-	components: {TxnRow, SHDW, StatCard},
+	components: {TokenGraph, TxnRow, SHDW, StatCard},
 	props: {
 		tokenInfo: {
 			type: Object,
@@ -113,6 +142,7 @@ export default {
 			limit: 25,
 
 			activeTokenSummary: {
+				mint: "11111111111111111111111111111111",
 				trade_summary: [],
 			},
 			numFormatter: new Intl.NumberFormat('en-US', {
@@ -132,7 +162,8 @@ export default {
 			return this.numFormatter.format((this.summary.gas_spent / 1000000000) * this.prices['So11111111111111111111111111111111111111112'].value)
 		},
 		filteredTradeSummary: function () {
-			return this.activeTokenSummary.trade_summary.filter(trade => trade.error === false).slice(this.page * this.limit, this.page * this.limit + this.limit);
+			return this.activeTokenSummary.trade_summary.filter(trade => trade.error === false).sort((a, b) => b.slot - a.slot).slice(this.page * this.limit, this.page * this.limit +
+					this.limit);
 		},
 		filteredTokens: function () {
 			const filtered = {};
@@ -147,7 +178,6 @@ export default {
 
 			return filtered;
 		},
-
 
 		totalProfit() {
 			let total_profit = 0;
@@ -167,7 +197,7 @@ export default {
 
 		adapted(trade) {
 			return Object.assign(trade, {
-				blockTime: Math.floor(new Date(trade.block).getTime() / 1000),
+				slot: trade.slot,
 				mint: this.activeTokenSummary.mint,
 				meta: {
 					fee: trade.gas,

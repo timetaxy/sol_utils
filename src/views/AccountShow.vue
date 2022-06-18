@@ -4,14 +4,6 @@
 			<OverviewCard class="overview" :style="overviewStyle" :summary="summary" :token-info="tokenInfo" :prices="prices"></OverviewCard>
 		</div>
 
-
-		<div class="col-12 mt-3">
-			<StatCard>
-				<h4>GRAPH</h4>
-				<TokenGraph :summary="summary"></TokenGraph>
-			</StatCard>
-		</div>
-
 		<div class="col-12 mt-3">
 			<StatCard>
 				<div class="row">
@@ -20,9 +12,9 @@
 					</div>
 					<div class="col-auto">
 						<button class="btn btn-checkbox mx-2 btn-sm" :class="hideDust ? 'active' : ''"
-								v-on:click="hideDust = !hideDust"><span>DUST {{hideDust ? 'HIDDEN' : 'SHOWN'}}</span></button>
+								v-on:click="hideDust = !hideDust"><span>DUST {{ hideDust ? 'HIDDEN' : 'SHOWN' }}</span></button>
 						<button class="btn btn-checkbox mx-2 btn-sm" :disabled="hideDust" :class="hideEmpty ? 'active' : ''"
-								v-on:click="hideEmpty = !hideEmpty"><span>EMPTY {{hideEmpty ? 'HIDDEN' : 'SHOWN'}}</span></button>
+								v-on:click="hideEmpty = !hideEmpty"><span>EMPTY {{ hideEmpty ? 'HIDDEN' : 'SHOWN' }}</span></button>
 					</div>
 				</div>
 				<TokenTable :hide-dust="hideDust" :hide-empty="hideEmpty" :prices="prices" :token-info="tokenInfo" :ua="userAsset"></TokenTable>
@@ -46,12 +38,11 @@ import TxnTable from "../components/dashboard/TxnTable";
 import {UserTokens} from "../util/user_tokens";
 import {TransactionManager} from "../util/transaction_manager";
 import OverviewCard from "../components/dashboard/OverviewCard";
-import TokenGraph from "../components/dashboard/TokenGraph";
 import Arberling from "../api/arberling";
 
 export default {
 	name: "AccountShow",
-	components: {TokenGraph, OverviewCard, TxnTable, TokenTable, StatCard},
+	components: {OverviewCard, TxnTable, TokenTable, StatCard},
 	data() {
 		return {
 			prices: {},
@@ -74,7 +65,7 @@ export default {
 		overviewStyle() {
 			return {
 				height: this.summary.loading ? '0' : 'auto',
-				maxHeight: this.summary.loading ? '0': '1000px',
+				maxHeight: this.summary.loading ? '0' : '10000000px',
 				// opacity: this.summary.loading ? '0': '1'
 			}
 		}
@@ -103,6 +94,13 @@ export default {
 
 		getSummary() {
 			Arberling.summary(this.$route.params.id).then(r => {
+				if (r.data.loading) {
+					setTimeout(() => {
+						this.getSummary()
+					}, 1000)
+					return
+				}
+
 				this.summary = r.data;
 			});
 		}

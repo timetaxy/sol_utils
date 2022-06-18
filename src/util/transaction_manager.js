@@ -3,6 +3,7 @@ import Arberling from "../api/arberling";
 
 export class TransactionManager {
 	transactions = [];
+	trades = [];
 
 	//Amount of txns to poll up to
 	pollLimit = 5; //(5*1000)
@@ -62,27 +63,31 @@ export class TransactionManager {
 	addSummary(tokenAddr, txn) {
 		// console.log("addSummary", tokenAddr, txn)
 
-		const profit = this.calculateProfit(tokenAddr, txn)
-		if (profit.token === '') {
+		const trades = this.calculateProfit(tokenAddr, txn)
+		this.trades.push(...trades)
+		for(let i = 0; i < trades.length; i++) {
+			const profit = trades[i]
+
+			if (profit.token === '') {
+				this.addGas(txn.meta.fee)
+				return
+			}
+
+			this.initSummary(profit.token.mint)
+			const existing = this.tradeSummary[profit.token.mint]
+
+			// console.log("Summary: " + profit.token.mint, txn, profit)
+
+			this.addSuccess(profit.diff)
 			this.addGas(txn.meta.fee)
-			return
+
+			this.tradeSummary[profit.token.mint] = {
+				success: existing.success + (txn.err === null ? 1 : 0),
+				failed: existing.failed + (txn.err !== null ? 1 : 0),
+				amount: profit.diff,
+				gas: existing.gas + txn.meta.fee,
+			}
 		}
-
-		this.initSummary(profit.token.mint)
-		const existing = this.tradeSummary[profit.token.mint]
-
-		// console.log("Summary: " + profit.token.mint, txn, profit)
-
-		this.addSuccess(profit.diff)
-		this.addGas(txn.meta.fee)
-
-		this.tradeSummary[profit.token.mint] = {
-			success: existing.success + (txn.err === null ? 1 : 0),
-			failed: existing.failed + (txn.err !== null ? 1 : 0),
-			amount: profit.diff,
-			gas: existing.gas + txn.meta.fee,
-		}
-
 	}
 
 
@@ -95,18 +100,18 @@ export class TransactionManager {
 
 	async get(id, before = null) {
 		this.loading = true;
-		let idx = 1;
-		let signatures = await this.getTxns(id, before)
+		// let idx = 1;
+		await this.getTxns(id, before)
 
-		while (signatures.length === 1000 && idx < this.pollLimit && this.loading) {
-			signatures = await this.getTxns(id, signatures[signatures.length - 1].signature)
-			// console.log(`Txns`, this.transactions.length, signatures[signatures.length - 1].signature)
-			idx++;
-		}
+		// while (signatures.length === 1000 && idx < this.pollLimit && this.loading) {
+		// 	signatures = await this.getTxns(id, signatures[signatures.length - 1].signature)
+		// 	// console.log(`Txns`, this.transactions.length, signatures[signatures.length - 1].signature)
+		// 	idx++;
+		// }
 
 		this.loading = false;
-		console.log("Summary", this.summary)
-		console.log("Trade Summary", this.tradeSummary)
+		// console.log("Summary", this.summary)
+		// console.log("Trade Summary", this.tradeSummary)
 	}
 
 	async getTxns(tokenAddr, before = null) {
@@ -160,14 +165,13 @@ export class TransactionManager {
 		const mintDiff = {};
 		const mintIdx = {};
 
-		// console.log("Calculating profit", txn)
+		console.log("Calculating profit", txn, tokenAddr)
 		for (let i = 0; i < txn.meta.postTokenBalances.length; i++) {
 			if (txn.meta.postTokenBalances[i].owner !== tokenAddr)
 				continue
 
 			const b = txn.meta.postTokenBalances[i]
 			mintDiff[b.mint] = parseInt(b.uiTokenAmount.amount)
-			// mintDiff[b.mint] = b.uiTokenAmount.uiAmount
 			mintIdx[b.mint] = b
 		}
 
@@ -183,29 +187,55 @@ export class TransactionManager {
 				delete mintDiff[b.mint]
 		}
 
-		// console.log("mintDiff", mintDiff)
-		if (Object.keys(mintDiff).length === 0) {
-			return {
-				token: '',
-				diff: 0,
-				humanDiff: 0.00,
+
+		let ownerIdx = -1;
+		for(let i = 0; i < txn.transaction.message.accountKeys.length; i++) {
+			console.log("ACC",txn.transaction.message.accountKeys[i])
+			if (tokenAddr === txn.transaction.message.accountKeys[i]) {
+				ownerIdx = i;
+				break
 			}
 		}
 
+		if (ownerIdx > -1) {
+			const preSol = txn.meta.preBalances[ownerIdx]
+			const postSol = txn.meta.postBalances[ownerIdx]
+			const diff = postSol - preSol
+			if (diff !== -txn.meta.fee) {
+				mintDiff["11111111111111111111111111111111"] = diff
+				mintIdx["11111111111111111111111111111111"] = {
+					Owner: tokenAddr,
+					Mint: "11111111111111111111111111111111",
+				}
+			}
 
-		const ok = Object.keys(mintDiff)[0]
-		const val = Object.values(mintDiff)[0]
-
-		// this.tokenChange = mintIdx[ok]
-		// this.balanceChange = {
-		// 	diff: val,
-		// 	humanDiff: val.toFixed(this.tokenChange.uiTokenAmount.decimals),
-		// };
-
-		return {
-			token: mintIdx[ok],
-			diff: parseInt(val),
 		}
+
+		if (Object.keys(mintDiff).length === 0) {
+			return [Object.assign(txn,{
+				token: '',
+				mint: '',
+				diff: 0,
+				gas: txn.meta.fee,
+			})]
+		}
+
+
+
+		let trades = [] ;
+		const ok = Object.keys(mintDiff)
+		for(let i = 0; i < ok.length; i++) {
+			const mint = ok[i]
+			const diff = mintDiff[mint]
+			trades.push(Object.assign(txn, {
+				token: mint,
+				mint: mint,
+				gas: i === 0 ? txn.meta.fee : 0,
+				diff: parseInt(diff),
+			}));
+		}
+
+		return trades;
 	}
 
 	/**

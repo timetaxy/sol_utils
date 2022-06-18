@@ -572,14 +572,3 @@ table tr {
 .btn-checkbox.active:after{
     width: 100%;
 }
-
-
-.loading-screen {
-    max-height: 0;
-    transition: all 2s ease-in-out;
-    overflow: hidden;
-}
-
-.loading-screen.active {
-    max-height: 1000px;
-}
