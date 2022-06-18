@@ -4,12 +4,12 @@
 			<a target="_blank" :href="`https://solscan.io/tx/${txn.signature}`">
 				<i v-if="txn.err === null" class="fa fa-eye d-none d-md-inline-block"></i>
 				<i v-else class="fa fa-eye-slash red d-none d-md-inline-block"></i>
-				<span class="small ms-3">{{ txn.signature.substr(0,12) }}...</span></a>
+				<span class="small ms-3">{{ txn.signature.substr(0, 12) }}...</span></a>
 		</td>
 		<td class="d-none d-md-table-cell"><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
 		<td class="d-none d-lg-table-cell">{{ humanTime }}</td>
 		<td class="d-none d-lg-table-cell">{{ gasFee }}
-			<SHDW class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
+			<SHDW v-show="gasFee !== '-'" class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 		</td>
 		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
 		<td class="text-center text-lg-start">
@@ -79,6 +79,9 @@ export default {
 		},
 
 		gasFee: function () {
+			if (this.txn.meta.fee === 0)
+				return '-';
+
 			return this.txn.meta.fee / LAMPORTS_PER_SOL;
 		},
 
@@ -107,9 +110,7 @@ export default {
 			return "";
 		},
 	},
-	methods: {
-
-	},
+	methods: {},
 	mounted() {
 
 		this.tokenChange = this.txn
