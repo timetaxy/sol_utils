@@ -15,6 +15,11 @@ const routes = [
         component: () => import(/* webpackChunkName: "account" */ '../views/AccountShow.vue')
     },
     {
+        path: '/tx/:id',
+        name: 'Home',
+        component: () => import(/* webpackChunkName: "transaction" */ '../views/TransactionShow.vue')
+    },
+    {
         path: "*",
         redirect: "/"
     }

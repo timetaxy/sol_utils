@@ -30,7 +30,7 @@
 			</tr>
 			</thead>
 			<tbody v-if="this.mgr !== null">
-			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${showErrors}-${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices"></TxnRow>
+			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${showErrors}-${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices" :mgr="mgr"></TxnRow>
 			</tbody>
 		</table>
 		<div class="row">

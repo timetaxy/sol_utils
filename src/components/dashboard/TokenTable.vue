@@ -105,6 +105,7 @@ export default {
 	beforeMount() {
 	},
 	mounted() {
+		console.log(`getParsedTokenAccountsByOwner`, this.$route.params.id)
 		this.ua.getParsedTokenAccountsByOwner(this.$route.params.id).then(r => {
 			this.tokens = r;
 			console.log(this.tokens)

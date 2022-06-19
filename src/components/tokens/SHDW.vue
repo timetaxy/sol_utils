@@ -1,6 +1,6 @@
 <template>
 	<img class="token-logo"
-			:src="`https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${mintAddr}/logo.png`" alt="">
+			:src="`https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${addr}/logo.png`" alt="">
 </template>
 
 <script>
@@ -14,6 +14,15 @@ export default {
 			}
 		}
 	},
+	computed:{
+		addr: function() {
+			if (this.mintAddr === "11111111111111111111111111111111") {
+				return "So11111111111111111111111111111111111111112"
+			}
+
+			return this.mintAddr
+		}
+	}
 }
 </script>
 

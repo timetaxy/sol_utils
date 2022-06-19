@@ -1,7 +1,13 @@
 import * as web3 from "@solana/web3.js";
+import {PublicKey} from "@solana/web3.js";
 import Arberling from "../api/arberling";
+import {Metadata} from "@metaplex-foundation/mpl-token-metadata";
 
 export class TransactionManager {
+	METADATA_PROGRAM_ID =
+		"metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
+	METADATA_PREFIX = "metadata";
+
 	transactions = [];
 	trades = [];
 
@@ -65,29 +71,7 @@ export class TransactionManager {
 
 		const trades = this.calculateProfit(tokenAddr, txn)
 		this.trades.push(...trades)
-		for (let i = 0; i < trades.length; i++) {
-			const profit = trades[i]
-
-			if (profit.token === '') {
-				this.addGas(txn.meta.fee)
-				return
-			}
-
-			this.initSummary(profit.token.mint)
-			const existing = this.tradeSummary[profit.token.mint]
-
-			// console.log("Summary: " + profit.token.mint, txn, profit)
-
-			this.addSuccess(profit.diff)
-			this.addGas(txn.meta.fee)
-
-			this.tradeSummary[profit.token.mint] = {
-				success: existing.success + (txn.err === null ? 1 : 0),
-				failed: existing.failed + (txn.err !== null ? 1 : 0),
-				amount: profit.diff,
-				gas: existing.gas + txn.meta.fee,
-			}
-		}
+		return trades;
 	}
 
 
@@ -114,7 +98,21 @@ export class TransactionManager {
 		// console.log("Trade Summary", this.tradeSummary)
 	}
 
-	async getTxns(tokenAddr, before = null) {
+	async getTxn(signature) {
+		const parsed = await this.parseTransaction({
+			signature: signature,
+			err: null,
+		})
+
+		console.log("Got Txn: ", parsed)
+		this.transactions.push(parsed)
+		return {
+			txn: parsed,
+			summary: this.addSummary(parsed.transaction.message.accountKeys[0], parsed),
+		}
+	}
+
+	async getTxns(tokenAddr, before = null, until = null) {
 		const opts = {
 			limit: 1000,
 		};
@@ -122,6 +120,11 @@ export class TransactionManager {
 		if (before !== null) {
 			console.debug("setting before", before)
 			opts.before = before;
+		}
+
+		if (until !== null) {
+			console.debug("setting until", until)
+			opts.until = until;
 		}
 
 		console.debug("getSignaturesForAddress", tokenAddr, opts)
@@ -177,7 +180,7 @@ export class TransactionManager {
 		const mintDiff = {};
 		const mintIdx = {};
 
-		console.log("Calculating profit", txn.signature, tokenAddr)
+		console.debug("Calculating profit", txn.signature, tokenAddr)
 		for (let i = 0; i < txn.meta.postTokenBalances.length; i++) {
 			if (txn.meta.postTokenBalances[i].owner !== tokenAddr)
 				continue
@@ -193,10 +196,19 @@ export class TransactionManager {
 
 			const b = txn.meta.preTokenBalances[i]
 			mintIdx[b.mint] = b
+
+			if (!mintDiff[b.mint]) {
+				mintDiff[b.mint] = 0 //Post balance was not found so assume account closed
+			}
+
 			mintDiff[b.mint] -= parseInt(b.uiTokenAmount.amount)
-			// mintDiff[b.mint] -= b.uiTokenAmount.uiAmount
-			if (mintDiff[b.mint] === 0)
-				delete mintDiff[b.mint]
+		}
+
+
+		const keys = Object.keys(mintDiff)
+		for (let i = 0; i < keys.length; i++) {
+			if (mintDiff[keys] === 0)
+				delete mintDiff[keys]
 		}
 
 
@@ -222,7 +234,7 @@ export class TransactionManager {
 		}
 
 		if (Object.keys(mintDiff).length === 0) {
-			console.log("No profit", txn.signature, tokenAddr)
+			console.debug("No profit", txn.signature, tokenAddr)
 			const t = {
 				...txn,
 				...{
@@ -282,5 +294,22 @@ export class TransactionManager {
 		const resp = await Arberling.transaction(signature)
 		return resp.data
 		// return this.connection.getTransaction(signature, {encoding: "jsonParsed"})
+	}
+
+	async getAccountInfo(tokenAddr) {
+		const m = await this.getMetadataAccount(tokenAddr);
+		// console.log("metadata acc: ", m[0]);
+		return await Metadata.fromAccountAddress(this.connection, m[0]);
+	}
+
+	async getMetadataAccount(tokenMint) {
+		const pk = new web3.PublicKey(tokenMint);
+		const program = new web3.PublicKey(this.METADATA_PROGRAM_ID)
+		const seeds = [
+			Buffer.from(this.METADATA_PREFIX),
+			new web3.PublicKey(this.METADATA_PROGRAM_ID).toBuffer(),
+			pk.toBuffer(),
+		]
+		return await PublicKey.findProgramAddress(seeds, program)
 	}
 }
