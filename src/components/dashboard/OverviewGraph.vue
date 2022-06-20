@@ -7,14 +7,14 @@
 						:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
 			</div>
 			<div class="col-auto">
-				<h4>{{ tokenInfo[activeTokenSummary.mint].name }}</h4>
+				<h4 class="mb-0">{{ tokenInfo[activeTokenSummary.mint] ? tokenInfo[activeTokenSummary.mint].name : activeTokenSummary.mint }}</h4>
 			</div>
 			<div class="col">
-				<h4 v-if="`${activeTokenProfit}` !== '0'" :class="activeTokenProfit >= 0 ? 'text-success' : 'text-danger'">{{ numFormatter.format(activeTokenProfit) }}</h4>
+				<h4 class="mb-0" v-if="`${activeTokenProfit}` !== '0'" :class="activeTokenProfit >= 0 ? 'text-success' : 'text-danger'">{{ numFormatter.format(activeTokenProfit) }}</h4>
 			</div>
 			<div class="col" v-if="`${activeTokenProfit}` !== '0'">
 				<h4 class="d-inline-block mb-0 me-2" :class="activeTokenProfit >= 0 ? 'text-success' : 'text-danger'">{{activeTokenProfit > 0 ? '+'
-						: '-'}} {{
+						: ''}} {{
 						simpleFormatter.format(activeTokenAmount) }}</h4>
 				<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo mb-2" style="height: 1.4rem"
 						:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">

@@ -23,9 +23,9 @@
 				<td>Signature</td>
 				<td class="d-none d-md-table-cell">Block</td>
 				<td class="d-none d-lg-table-cell">Time</td>
+				<td>Token</td>
 				<td class="d-none d-lg-table-cell">Gas Cost</td>
 				<td>Change</td>
-				<td>Token</td>
 				<td class="text-end">Value</td>
 			</tr>
 			</thead>

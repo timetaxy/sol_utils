@@ -590,3 +590,8 @@ table tr {
 .token-card {
     filter: brightness(0.4);
 }
+
+.red {
+    color: red !important;
+    fill: red !important;
+}

@@ -8,19 +8,19 @@
 		</td>
 		<td class="d-none d-md-table-cell"><a target="_blank" :href="`https://solscan.io/block/${txn.slot}`">#{{ txn.slot }}</a></td>
 		<td class="d-none d-lg-table-cell">{{ humanTime }}</td>
-		<td class="d-none d-lg-table-cell">{{ gasFee }}
-			<SHDW v-show="gasFee !== '-'" class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
-		</td>
-		<td :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
 		<td v-if="txn.err" colspan="2"></td>
 		<td v-if="!txn.err" class="text-center text-lg-start">
 			<img height="24px" v-if="isNFT" :src="nftInfo.data.image">
 			<SHDW v-if="!isNFT" :mint-addr="tokenChange.mint" class="small"></SHDW>
 			<a target="_blank" :href="`https://solscan.io/account/${tokenChange.mint}`" class="d-none d-md-inline-block ms-1">{{ tokenName }}</a>
 		</td>
+		<td class="d-none d-lg-table-cell text-end">{{ gasFee }}
+			<SHDW v-show="gasFee !== '-'" class="small" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
+		</td>
+		<td class="text-end" :class="colorStyle">{{ amountSign }}{{ txnBalanceChange }}</td>
 		<td v-if="!txn.err" class="text-end">
-			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
 			{{ this.prices[tokenChange.mint] ? numFormatter.format((balanceChange.diff * this.prices[tokenChange.mint].value)) : 0 }}
+			<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
 		</td>
 	</tr>
 </template>
@@ -192,11 +192,6 @@ export default {
 </script>
 
 <style scoped>
-
-.red {
-	color: red !important;
-	fill: red !important;
-}
 
 a {
 	text-decoration: none;

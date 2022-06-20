@@ -161,6 +161,13 @@ export default {
 		},
 
 		combine(ov1, ov2) {
+			if (!ov2) {
+				return ov1
+			}
+			if (!ov1) {
+				return ov2
+			}
+
 			const ov = {
 				mint: ov2.mint,
 				amount_made: ov1.amount_made + ov2.amount_made,
@@ -175,7 +182,7 @@ export default {
 			for (let i = 0; i < ov1.trade_summary.length; i++) {
 				let t1 = ov1.trade_summary[i]
 
-				for (let l = lastIdx; ov2.trade_summary.length; l++) {
+				for (let l = lastIdx; l < ov2.trade_summary.length; l++) {
 					let t2 = ov2.trade_summary[l]
 
 					if (t2.slot >= t1.slot) {

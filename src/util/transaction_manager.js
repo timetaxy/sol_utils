@@ -255,12 +255,16 @@ export class TransactionManager {
 			const mint = ok[i]
 			const diff = mintDiff[mint]
 
+			if (diff === 0) {
+				continue
+			}
+
 			const t = {
 				...txn,
 				...{
 					token: mint,
 					mint: mint,
-					diff: parseInt(diff),
+					diff: parseFloat(diff),
 					meta: {fee: i === 0 ? txn.meta.fee : 0}
 				}
 			}

@@ -70,13 +70,13 @@
 					<div class="col-12">
 						<table class="table table-sm table-hover">
 							<thead>
-							<tr>
+							<tr class="text-center">
 								<td>Signature</td>
 								<td class="d-none d-md-table-cell">Block</td>
 								<td class="d-none d-lg-table-cell">Time</td>
+								<td class="">Token</td>
 								<td class="d-none d-lg-table-cell">Gas Cost</td>
-								<td>Change</td>
-								<td>Token</td>
+								<td class="">Change</td>
 								<td class="text-end">Value</td>
 							</tr>
 							</thead>
@@ -91,8 +91,14 @@
 								<td class="d-none d-lg-table-cell"></td>
 								<td class="d-none d-lg-table-cell"></td>
 								<td></td>
-								<td></td>
-								<td class="text-end">{{ numFormatter.format(tradeProfit) }}</td>
+								<td class="text-end" :class="tradeBalance >= 0 ? 'green' : 'red'">{{tradeBalance > 0 ? '+'
+										: ''}}{{tradeBalance}}
+									<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo small"
+											:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
+								</td>
+								<td class="text-end">{{ numFormatter.format(tradeProfit) }}
+									<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
+								</td>
 							</tr>
 							</tfoot>
 						</table>
@@ -173,6 +179,10 @@ export default {
 			}
 
 			return filtered;
+		},
+
+		tradeBalance() {
+			return this.activeTokenSummary.amount_made / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9)
 		},
 
 		tradeProfit() {
