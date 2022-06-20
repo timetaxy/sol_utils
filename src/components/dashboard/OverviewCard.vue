@@ -1,22 +1,5 @@
 <template>
 	<div class="overview">
-		<div class="loading-screen" :class="summary.loading ? 'active' : ''" v-show="summary.loading">
-			<StatCard>
-				<div class="row">
-					<div class="col text-center">
-						<div class="overview-loading-spinner mt-3">
-							<div class="spinner-border text-primary" role="status">
-							</div>
-						</div>
-					</div>
-					<div class="col-5">
-						<h6>Loading Account Summary</h6>
-						<p class="small">Summaries for accounts with large transaction history may take a while to generate until the account cache is warmed.</p>
-					</div>
-				</div>
-			</StatCard>
-		</div>
-
 		<div class="mt-4 row text-center" v-if="summary.successful_trades > 0">
 			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
@@ -87,7 +70,7 @@
 						<p class="mb-0 small">Running Total: {{ simpleFormatter.format(activeTokenSummary.amount_made / 1000000000 || 0) }}</p>
 					</div>
 				</div>
-				<TokenGraph :active-token="activeTokenSummary.mint" :summary="summary"></TokenGraph>
+				<TokenGraph :token-info="tokenInfo" :active-token="activeTokenSummary.mint" :summary="summary"></TokenGraph>
 			</StatCard>
 		</div>
 
@@ -209,7 +192,7 @@ export default {
 		tradeProfit() {
 			const tradePrice = this.prices[this.activeTokenSummary.mint] ? this.prices[this.activeTokenSummary.mint].value : 0;
 			const amount = this.activeTokenSummary.amount_made * tradePrice;
-			return amount / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9);
+			return (amount / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9));
 		},
 
 		totalProfit() {

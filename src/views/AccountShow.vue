@@ -1,6 +1,38 @@
 <template>
 	<div class="container">
 		<div class="col-12 mt-3">
+			<StatCard>
+				<div class="row">
+					<div class="col">
+						<h4>{{ $route.params.id }}</h4>
+					</div>
+					<div class="col-auto">
+						<a class="me-2" target="_blank" :href="`https://solscan.io/account/${$route.params.id}`"><img height="24px" src="@/assets/images/solscan.png" alt="a"></a>
+						<a class="me-2" target="_blank" :href="`https://explorer.solana.com/account/${$route.params.id}`"><img height="24px" src="@/assets/images/solana_explorer.png" alt="a"></a>
+						<a class="me-2" target="_blank" :href="`https://solana.fm//account/${$route.params.id}`"><img height="24px" src="@/assets/images/solanafm.png" alt="a"></a>
+					</div>
+				</div>
+
+				<AccountProfile :summary="summary" v-if="!summary.loading"></AccountProfile>
+			</StatCard>
+
+			<div class="loading-screen" :class="summary.loading ? 'active' : ''" v-show="summary.loading">
+				<StatCard>
+					<div class="row">
+						<div class="col text-center">
+							<div class="overview-loading-spinner mt-3">
+								<div class="spinner-border text-primary" role="status">
+								</div>
+							</div>
+						</div>
+						<div class="col-5">
+							<h6>Loading Account Summary</h6>
+							<p class="small">Summaries for accounts with large transaction history may take a while to generate until the account cache is warmed.</p>
+						</div>
+					</div>
+				</StatCard>
+			</div>
+
 			<OverviewCard class="overview" :style="overviewStyle" :summary="summary" :token-info="tokenInfo" :prices="prices"></OverviewCard>
 		</div>
 
@@ -38,10 +70,11 @@ import {UserTokens} from "../util/user_tokens";
 import {TransactionManager} from "../util/transaction_manager";
 import OverviewCard from "../components/dashboard/OverviewCard";
 import Arberling from "../api/arberling";
+import AccountProfile from "../components/dashboard/AccountProfile";
 
 export default {
 	name: "AccountShow",
-	components: {OverviewCard, TxnTable, TokenTable, StatCard},
+	components: {AccountProfile, OverviewCard, TxnTable, TokenTable, StatCard},
 	data() {
 		return {
 			prices: {},
@@ -96,7 +129,7 @@ export default {
 				if (r.data.loading) {
 					setTimeout(() => {
 						this.getSummary()
-					}, 1000)
+					}, 3000)
 					return
 				}
 

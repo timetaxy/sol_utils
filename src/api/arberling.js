@@ -17,7 +17,7 @@ export class Arberling {
 
 
 	summary(publicKey) {
-		const uri = `${this.base}/accounts/${publicKey}/summary`
+		const uri = `${this.base}/accounts/${publicKey}/summary?skipCache=true`
 		return axios.get(uri)
 	}
 

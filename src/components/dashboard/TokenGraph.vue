@@ -42,6 +42,10 @@ export default {
 				return "11111111111111111111111111111111" //Sol Native
 			}
 		},
+		tokenInfo: {
+			type: Object,
+			required: true,
+		},
 	},
 	computed: {
 		hasEnoughData() {
@@ -71,22 +75,39 @@ export default {
 				return a.slot - b.slot;
 			});
 
+			//If we start off negative this should be flipped as it indicates an in initial swap to create the account
+			// let isFlipped = false;
+			if (sorted[0].diff < 0) {
+				// solAmountArr.push(Math.abs(sorted[0].diff));
+				// gasAmountArr.push(lastGas + sorted[0].gas);
+				// labelArr.push(new Date(sorted[0].block_time * 1000).toLocaleString());
+				// isFlipped = true;
+			}
+
 			for (let i = 0; i < sorted.length; i++) {
-				solAmountArr.push(lastAmount + sorted[i].diff);
+				let humanDiff = sorted[i].diff;
+				// if (isFlipped)
+				// 	humanDiff = Math.abs(humanDiff) * -1;
+
+				if(this.tokenInfo[this.activeToken]) {
+					humanDiff /= Math.pow(10, this.tokenInfo[this.activeToken].decimals)
+				}
+
+				solAmountArr.push(lastAmount + humanDiff);
 				gasAmountArr.push(lastGas + sorted[i].gas);
 
-				// labelArr.push(new Date(sorted[i].block_time * 1000).toLocaleDateString());
-				labelArr.push(sorted[i].slot);
-				lastAmount += sorted[i].diff;
+				labelArr.push(new Date(sorted[i].block_time * 1000).toLocaleString());
+				// labelArr.push(sorted[i].slot);
+				lastAmount += humanDiff;
 				lastGas += sorted[i].gas;
 
-				if (sorted[i].diff > largestGainAmount) {
-					largestGainAmount = sorted[i].diff;
+				if (humanDiff > largestGainAmount) {
+					largestGainAmount = humanDiff;
 					largestGainIdx = i;
 				}
 
-				if (sorted[i].diff < largestLossAmount) {
-					largestLossAmount = sorted[i].diff;
+				if (humanDiff < largestLossAmount) {
+					largestLossAmount = humanDiff;
 					largestLossIdx = i;
 				}
 			}
@@ -141,7 +162,11 @@ export default {
 							backgroundColor: '#6a7985'
 						},
 					},
-					extraCssText: `background-color: rgba(0,0,0,0.2);color:#fff`,
+					formatter: (p) => {
+						return `${p[0].name}: ${p[0].value.toFixed(4)}`;
+					},
+					color: "#fff",
+					extraCssText: `background-color: rgba(0,0,0,0.6);color:#ffffff`,
 				},
 				series: [
 					// {
