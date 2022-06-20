@@ -17,9 +17,8 @@
 			</div>
 			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
 				<StatCard>
-					<h2 class="text-left">Profit</h2>
-					<h1>{{ numFormatter.format(totalProfit / 1000000000) }}
-					</h1>
+					<h2 class="text-left">Unrealised Gain</h2>
+					<h1>{{ numFormatter.format(totalProfit - inputCostTotal - gasCostUsd) }}</h1>
 				</StatCard>
 			</div>
 			<div class="col-12 col-md-6 col-lg-3 mt-3 mt-lg-0">
@@ -28,7 +27,7 @@
 						<small class="xsmall grey">
 							<SHDW style="height: 18px" mint-addr="So11111111111111111111111111111111111111112"></SHDW>
 							<span class="small text-white">{{ gasCostSol }}</span></small></h2>
-					<h1>{{ gasCostUsd }}
+					<h1>{{ numFormatter.format(gasCostUsd) }}
 					</h1>
 
 				</StatCard>
@@ -54,23 +53,9 @@
 			</div>
 		</div>
 
-
 		<div class="col-12 mt-3">
 			<StatCard>
-				<div class="row">
-					<div class="col-auto">
-						<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo"
-								:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
-					</div>
-					<div class="col">
-						<h4>{{ tokenInfo[activeTokenSummary.mint].name }}</h4>
-					</div>
-					<div class="col-auto small">
-						<p class="mb-0 small">Current Price: {{ prices[activeTokenSummary.mint] ? numFormatter.format(prices[activeTokenSummary.mint].value) : '-' }}</p>
-						<p class="mb-0 small">Running Total: {{ simpleFormatter.format(activeTokenSummary.amount_made / 1000000000 || 0) }}</p>
-					</div>
-				</div>
-				<TokenGraph :token-info="tokenInfo" :active-token="activeTokenSummary.mint" :summary="summary"></TokenGraph>
+				<OverviewGraph :summary="summary" :token-info="tokenInfo" :prices="prices" :active-token-summary="activeTokenSummary"></OverviewGraph>
 			</StatCard>
 		</div>
 
@@ -124,11 +109,11 @@ import StatCard from "./StatCard";
 import SHDW from "../tokens/SHDW";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
 import TxnRow from "./TxnRow";
-import TokenGraph from "./TokenGraph";
+import OverviewGraph from "./OverviewGraph";
 
 export default {
 	name: "OverviewCard",
-	components: {TokenGraph, TxnRow, SHDW, StatCard},
+	components: {OverviewGraph, TxnRow, SHDW, StatCard},
 	props: {
 		tokenInfo: {
 			type: Object,
@@ -162,6 +147,7 @@ export default {
 		}
 	},
 	computed: {
+
 		gasCostSol: function () {
 			return (this.summary.gas_spent / LAMPORTS_PER_SOL).toFixed(4);
 		},
@@ -169,7 +155,7 @@ export default {
 			if (!this.prices['So11111111111111111111111111111111111111112'])
 				return -1;
 
-			return this.numFormatter.format((this.summary.gas_spent / 1000000000) * this.prices['So11111111111111111111111111111111111111112'].value)
+			return (this.summary.gas_spent / 1000000000) * this.prices['So11111111111111111111111111111111111111112'].value
 		},
 		filteredTradeSummary: function () {
 			return this.activeTokenSummary.trade_summary.filter(trade => trade.error === false).sort((a, b) => b.slot - a.slot).slice(this.page * this.limit, this.page * this.limit +
@@ -199,12 +185,26 @@ export default {
 			let total_profit = 0;
 			for (let idx in this.summary.tokens) {
 				const token = this.summary.tokens[idx]
-				if (this.prices[idx])
-					total_profit += token.amount_made * this.prices[idx].value;
+				if (this.prices[idx] && this.tokenInfo[idx]) {
+					const amount = token.amount_made / Math.pow(10, this.tokenInfo[idx].decimals);
+					total_profit += amount * this.prices[idx].value;
+				}
+			}
+			return total_profit;
+		},
+
+		inputCostTotal: function() {
+			let totalCost = 0;
+			for(let i = 0; i < this.summary.transfers.length; i++) {
+				const xfer = this.summary.transfers[i];
+				if(this.prices[xfer.mint]) {
+					const amount = xfer.diff / Math.pow(10, this.tokenInfo[xfer.mint].decimals);
+					totalCost += amount * this.prices[xfer.mint].value;
+				}
 			}
 
-			return total_profit;
-		}
+			return totalCost;
+		},
 	},
 	methods: {
 		setActiveToken: function (token) {

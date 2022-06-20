@@ -55,12 +55,21 @@ export default {
 		},
 
 		lastActive: function () {
+			if (this.firstTxn.blockTime === 0)
+				return 'N/A';
+
 			return new Date(this.firstTxn.blockTime * 1000).toLocaleString();
 		},
 		createdAt: function () {
+			if (this.lastTxn.blockTime === 0)
+				return 'N/A';
+
 			return new Date(this.lastTxn.blockTime * 1000).toLocaleString();
 		},
 		createdBy: function () {
+			if (this.lastTxn.blockTime === 0)
+				return 'N/A';
+
 			if (!this.lastTxn.transaction)
 				return "-";
 
@@ -68,14 +77,18 @@ export default {
 		}
 	},
 	mounted() {
-		Arberling.transaction(this.summary.first_signature).then(txn => {
-			console.log("first_signature", txn.data)
-			this.firstTxn = txn.data
-		})
-		Arberling.transaction(this.summary.last_signature).then(txn => {
-			console.log("last_signature", txn.data)
-			this.lastTxn = txn.data
-		})
+
+		if (this.summary.first_signature !== null)
+			Arberling.transaction(this.summary.first_signature).then(txn => {
+				console.log("first_signature", txn.data)
+				this.firstTxn = txn.data
+			})
+
+		if (this.summary.last_signature !== null)
+			Arberling.transaction(this.summary.last_signature).then(txn => {
+				console.log("last_signature", txn.data)
+				this.lastTxn = txn.data
+			})
 	}
 }
 </script>

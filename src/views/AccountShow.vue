@@ -14,13 +14,11 @@
 				</div>
 
 				<AccountProfile :summary="summary" v-if="!summary.loading"></AccountProfile>
-			</StatCard>
 
-			<div class="loading-screen" :class="summary.loading ? 'active' : ''" v-show="summary.loading">
-				<StatCard>
+				<div class="loading-screen" :class="summary.loading ? 'active' : ''" v-show="summary.loading">
 					<div class="row">
 						<div class="col text-center">
-							<div class="overview-loading-spinner mt-3">
+							<div class="overview-loading-spinner mt-4">
 								<div class="spinner-border text-primary" role="status">
 								</div>
 							</div>
@@ -30,8 +28,9 @@
 							<p class="small">Summaries for accounts with large transaction history may take a while to generate until the account cache is warmed.</p>
 						</div>
 					</div>
-				</StatCard>
-			</div>
+				</div>
+			</StatCard>
+
 
 			<OverviewCard class="overview" :style="overviewStyle" :summary="summary" :token-info="tokenInfo" :prices="prices"></OverviewCard>
 		</div>
@@ -84,12 +83,14 @@ export default {
 			hideDust: true,
 			hideEmpty: true,
 
+			summaryTimeout: null,
 			summary: {
 				loading: true,
 				successful_trades: 0,
 				failed_trades: 0,
 				gas_spent: 0,
 				tokens: {},
+				transfers: [],
 			},
 		}
 	},
@@ -127,14 +128,69 @@ export default {
 		getSummary() {
 			Arberling.summary(this.$route.params.id).then(r => {
 				if (r.data.loading) {
-					setTimeout(() => {
+					this.summaryTimeout = setTimeout(() => {
 						this.getSummary()
 					}, 3000)
 					return
 				}
 
-				this.summary = r.data;
+				this.summary = this.combineWrappedNativeSOL(r.data);
 			});
+		},
+
+
+		/**
+		 * Combine Native & Wrapped SOL txns into one array for better viewing
+		 * @param data
+		 * @returns {*}
+		 */
+		combineWrappedNativeSOL(data) {
+			data.tokens["So11111111111111111111111111111111111111112"] = this.combine(
+					data.tokens["11111111111111111111111111111111"],
+					data.tokens["So11111111111111111111111111111111111111112"]
+			)
+			delete data.tokens["11111111111111111111111111111111"]
+
+			for (let i = 0; i < data.transfers.length; i++) {
+				if (data.transfers[i].mint === "11111111111111111111111111111111") {
+					data.transfers[i].mint = "So11111111111111111111111111111111111111112"
+				}
+			}
+
+			return data;
+		},
+
+		combine(ov1, ov2) {
+			const ov = {
+				mint: ov2.mint,
+				amount_made: ov1.amount_made + ov2.amount_made,
+				failed_trades: ov1.failed_trades + ov2.failed_trades,
+				successful_trades: ov1.successful_trades + ov2.successful_trades,
+				gas_spent: ov1.gas_spent + ov2.gas_spent,
+				trade_summary: ov1.trade_summary.concat(ov2.trade_summary),
+			}
+
+
+			let lastIdx = 0;
+			for (let i = 0; i < ov1.trade_summary.length; i++) {
+				let t1 = ov1.trade_summary[i]
+
+				for (let l = lastIdx; ov2.trade_summary.length; l++) {
+					let t2 = ov2.trade_summary[l]
+
+					if (t2.slot >= t1.slot) {
+						const pre = ov2.trade_summary.slice(0, l)
+						const later = ov2.trade_summary.slice(l + 1)
+						pre.push(t1)
+						ov2.trade_summary = pre.concat(later)
+						lastIdx = l
+						break
+					}
+				}
+
+			}
+
+			return ov;
 		}
 	},
 	beforeMount() {
@@ -161,6 +217,7 @@ export default {
 	},
 	beforeDestroy() {
 		this.txnManager.stop();
+		clearTimeout(this.summaryTimeout)
 	},
 }
 </script>
