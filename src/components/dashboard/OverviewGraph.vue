@@ -12,6 +12,13 @@
 			<div class="col">
 				<h4 v-if="`${activeTokenProfit}` !== '0'" :class="activeTokenProfit >= 0 ? 'text-success' : 'text-danger'">{{ numFormatter.format(activeTokenProfit) }}</h4>
 			</div>
+			<div class="col" v-if="`${activeTokenProfit}` !== '0'">
+				<h4 class="d-inline-block mb-0 me-2" :class="activeTokenProfit >= 0 ? 'text-success' : 'text-danger'">{{activeTokenProfit > 0 ? '+'
+						: '-'}} {{
+						simpleFormatter.format(activeTokenAmount) }}</h4>
+				<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo mb-2" style="height: 1.4rem"
+						:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
+			</div>
 			<div class="col-auto small">
 				<p class="mb-0 small">Current Price: {{ prices[activeTokenSummary.mint] ? numFormatter.format(prices[activeTokenSummary.mint].value) : '-' }}</p>
 				<p class="mb-0 small">Running Total: {{ simpleFormatter.format(activeTokenSummary.amount_made / Math.pow(10, tokenDecimals)) }}</p>
@@ -69,6 +76,10 @@ export default {
 				return 0;
 
 			return this.prices[this.activeTokenSummary.mint].value;
+		},
+
+		activeTokenAmount: function() {
+			return (this.activeTokenSummary.amount_made - this.inputAmount) / Math.pow(10, this.tokenDecimals);
 		},
 
 		activeTokenProfit: function () {

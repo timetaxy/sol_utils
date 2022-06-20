@@ -15,8 +15,9 @@
 				</div>
 			</div>
 			<div class="col-auto">
-				<div class="badge me-2 bg-success">Whale</div>
-				<div class="badge me-2 bg-success">Bot</div>
+				<div class="badge me-2 bg-success" v-show="summary.amount_made > 1000">Whale</div>
+				<div class="badge me-2 bg-warning" v-show="summary.failed_trades > 1000">Bot</div>
+				<div class="badge me-2 bg-info" v-show="firstTxn.blockTime !== 0 && firstTxn.blockTime < Date.now()">Inactive</div>
 			</div>
 		</div>
 	</div>
