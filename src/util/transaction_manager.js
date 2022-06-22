@@ -23,6 +23,8 @@ export class TransactionManager {
 		gas: 0,
 	}
 
+	tokenPrices = null
+
 	tradeSummary = {
 		"So11111111111111111111111111111111111111112": {
 			success: 0,
@@ -34,6 +36,10 @@ export class TransactionManager {
 
 	stop() {
 		this.loading = false;
+	}
+
+	setTokenPrices(prices) {
+		this.tokenPrices = prices
 	}
 
 	initSummary(mintAddr) {
@@ -68,9 +74,27 @@ export class TransactionManager {
 
 	addSummary(tokenAddr, txn) {
 		// console.log("addSummary", tokenAddr, txn)
-
 		const trades = this.calculateProfit(tokenAddr, txn)
 		this.trades.push(...trades)
+
+
+		if (this.tokenPrices) {
+			let totalProfit = 0;
+			for (let i = 0; i < trades.length;i++){
+				if (this.tokenPrices[trades[i].mint]) {
+					const tokenPrice = this.tokenPrices[trades[i].mint].value
+					const profit = (trades[i].diff / Math.pow(10, this.tokenPrices[trades[i].mint].decimals)) * tokenPrice;
+					console.log("Profit: ", profit)
+					totalProfit += profit
+				} else {
+					console.log("Missing pricing data", txn)
+				}
+			}
+			this.addSuccess(totalProfit)
+		} else {
+			this.addSuccess(0)
+		}
+
 		return trades;
 	}
 
@@ -82,10 +106,10 @@ export class TransactionManager {
 		);
 	}
 
-	async get(id, before = null) {
+	async get(id, before = null, until = null) {
 		this.loading = true;
 		// let idx = 1;
-		await this.getTxns(id, before)
+		const newTrades = await this.getTxns(id, before, until)
 
 		// while (signatures.length === 1000 && idx < this.pollLimit && this.loading) {
 		// 	signatures = await this.getTxns(id, signatures[signatures.length - 1].signature)
@@ -96,6 +120,7 @@ export class TransactionManager {
 		this.loading = false;
 		// console.log("Summary", this.summary)
 		// console.log("Trade Summary", this.tradeSummary)
+		return newTrades;
 	}
 
 	async getTxn(signature) {
@@ -131,6 +156,7 @@ export class TransactionManager {
 		const signatures = await this.getSignatures(tokenAddr, opts);
 		// console.log("signatures", signatures.length)
 
+		const newTrades = [];
 		for (let i = 0; i < signatures.length && i < 100; i++) {
 			const parsed = await this.parseTransaction(signatures[i])
 			this.transactions.push(parsed)
@@ -139,7 +165,7 @@ export class TransactionManager {
 				this.addSummary(tokenAddr, parsed)
 			else {
 				this.addFailed()
-				this.trades.push({
+				newTrades.push({
 					...parsed,
 					...{
 						err: true,
@@ -153,7 +179,13 @@ export class TransactionManager {
 			}
 		}
 
-		return signatures
+		if (until !== null) {
+			this.trades = newTrades.concat(this.trades)
+		} else {
+			this.trades = this.trades.concat(newTrades)
+		}
+
+		return newTrades
 	}
 
 	async parseTransaction(txn) {

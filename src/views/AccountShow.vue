@@ -122,6 +122,8 @@ export default {
 				r.data["11111111111111111111111111111111"] = sol //SOL native
 
 				this.prices = r.data
+				this.txnManager.setTokenPrices(this.prices)
+				this.txnManager.get(this.$route.params.id);
 			})
 		},
 
@@ -219,8 +221,6 @@ export default {
 		this.getPrices();
 		this.getInfo();
 		this.getSummary()
-
-		this.txnManager.get(this.$route.params.id);
 	},
 	beforeDestroy() {
 		this.txnManager.stop();

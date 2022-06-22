@@ -1,8 +1,23 @@
 <template>
 	<div>
 		<div class="row">
-			<div class="col">
+			<div class="col-auto">
 				<h3><i class="fa fa-arrow-right-arrow-left me-2"></i> TRANSACTIONS</h3>
+			</div>
+			<div class="col-1">
+				<span v-show="mgr.loading">
+					<i class="fa fa-spinner fa-spin"></i>
+				</span>
+			</div>
+			<div class="col text-center small">
+				<div class="small">
+					<span class="green">{{ mgr.summary.success }}</span>
+					<span>/</span>
+					<span class="me-3 red">{{ mgr.summary.failed }}</span>
+					<span class="me-3 ">Gas: {{ numFormatter.format(recentGasUsed) }}</span>
+					<span>Gross: </span><span class="me-3">{{ numFormatter.format(recentAmountMade) }}</span>
+					<span>Net: </span><span class="me-3" :class="`${recentProfit > 0 ? 'green' : 'red'}`">{{ numFormatter.format(recentProfit) }}</span>
+				</div>
 			</div>
 			<div class="col-auto">
 				<button class="btn btn-checkbox mx-2 btn-sm" :class="!showErrors ? 'active' : ''"
@@ -30,7 +45,8 @@
 			</tr>
 			</thead>
 			<tbody v-if="this.mgr !== null">
-			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${showErrors}-${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices" :mgr="mgr"></TxnRow>
+			<TxnRow v-for="(txn,key) in filteredTransactions" :key="`${showErrors}${txn.signature}-${showErrors}-${page}-${key}`" :txn="txn" :token-info="tokenInfo" :prices="prices"
+					:mgr="mgr"></TxnRow>
 			</tbody>
 		</table>
 		<div class="row">
@@ -39,7 +55,7 @@
 			</div>
 			<div class="col-auto text-end">
 				<button class="btn btn-outline-light btn-sm" :disabled="page <= 0" v-on:click="page--">Back</button>
-				<span class="mx-3">{{page}}</span>
+				<span class="mx-3">{{ page }}</span>
 				<button class="btn btn-outline-light btn-sm" :disabled="!canGoNext" v-on:click="page++">Next</button>
 			</div>
 		</div>
@@ -67,24 +83,45 @@ export default {
 			type: UserTokens,
 			required: true,
 		},
-		mgr:{
+		mgr: {
 			type: TransactionManager,
 			required: true,
 		},
 	},
 	data() {
 		return {
+			txnPolling: null,
 			showErrors: false,
 			page: 0,
 			limit: 10,
+			numFormatter: new Intl.NumberFormat('en-US', {
+				style: 'currency',
+				currency: 'USD',
+				minimumFractionDigits: 3,
+			}),
 		}
 	},
 	computed: {
+		recentAmountMade: function () {
+			return this.mgr.summary.amountMade
+		},
+		recentGasUsed: function () {
+			if (!this.prices["So11111111111111111111111111111111111111112"])
+				return 0
+
+			const cost = (this.mgr.summary.gas / Math.pow(10, 9)) * this.prices["So11111111111111111111111111111111111111112"].value;
+			return cost
+		},
+
+		recentProfit: function () {
+			return this.recentAmountMade - this.recentGasUsed;
+		},
+
 		canGoNext: function () {
 			return this.mgr.trades.filter(txn => txn.err === null).length > (this.page * this.limit) + this.limit
 		},
 
-		canLoadMore: function() {
+		canLoadMore: function () {
 			return !this.canGoNext && !this.mgr.loading;
 		},
 
@@ -96,12 +133,40 @@ export default {
 		}
 	},
 	methods: {
-		loadMore: function() {
+		loadMore: function () {
 			this.mgr.pollLimit += 1000
 			const lastTxn = this.mgr.trades[this.mgr.trades.length - 1]
 			this.mgr.get(this.$route.params.id, lastTxn.signature)
-		}
+		},
+		loadRecent: function () {
+			const firstTxn = this.mgr.trades[0]
+			console.log("Checking for recent txns since", firstTxn)
+			this.mgr.get(this.$route.params.id, null, firstTxn.signature).then((newTrades) => {
+				if (newTrades.length === 0)
+					return
+
+				for (let i = 0; i < newTrades.length; i++) {
+
+					if (newTrades[i].err !== null) {
+						this.$toastr.e(`<small>${newTrades[i].signature.substr(0,32)}</small>`, "Transaction Failed")
+					} else {
+						this.$toastr.s(`<small>${newTrades[i].signature.substr(0,32)}</small>`, "Transaction Success")
+					}
+				}
+
+				console.log("New Trades", newTrades)
+			})
+
+		},
 	},
+	mounted() {
+		this.txnPolling = setInterval(() => {
+			this.loadRecent()
+		}, 3000)
+	},
+	beforeDestroy() {
+		clearInterval(this.txnPolling)
+	}
 }
 </script>
 
