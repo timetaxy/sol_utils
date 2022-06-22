@@ -146,7 +146,6 @@ export default {
 					return
 
 				for (let i = 0; i < newTrades.length; i++) {
-
 					if (newTrades[i].err !== null) {
 						this.$toastr.e(`<small>${newTrades[i].signature.substr(0,32)}</small>`, "Transaction Failed")
 					} else {

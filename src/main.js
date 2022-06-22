@@ -13,7 +13,7 @@ Vue.config.productionTip = false;
 
 Vue.use(VueToastr, {
 	defaultProgressBar: false,
-	defaultPosition: "toast-top-right"
+	defaultPosition: "toast-bottom-right"
 });
 
 new Vue({
