@@ -55,6 +55,12 @@ export default {
 			return this.solData.data.length > 2;
 		},
 
+		decimals() {
+			if (!this.tokenInfo[this.activeToken])
+				return 6;
+			return this.tokenInfo[this.activeToken].decimals;
+		},
+
 		solData() {
 			const solAmountArr = [];
 			const gasAmountArr = [];
@@ -77,22 +83,16 @@ export default {
 
 			//If we start off negative this should be flipped as it indicates an in initial swap to create the account
 			// let isFlipped = false;
-			if (sorted[0].diff < 0) {
+			// if (sorted[0].diff < 0) {
 				// solAmountArr.push(Math.abs(sorted[0].diff));
 				// gasAmountArr.push(lastGas + sorted[0].gas);
 				// labelArr.push(new Date(sorted[0].block_time * 1000).toLocaleString());
 				// isFlipped = true;
-			}
+			// }
 
 			for (let i = 0; i < sorted.length; i++) {
 				let humanDiff = sorted[i].diff;
-				// if (isFlipped)
-				// 	humanDiff = Math.abs(humanDiff) * -1;
-
-				if(this.tokenInfo[this.activeToken]) {
-					humanDiff /= Math.pow(10, this.tokenInfo[this.activeToken].decimals)
-				}
-
+				humanDiff /= Math.pow(10, this.decimals)
 				solAmountArr.push(lastAmount + humanDiff);
 				gasAmountArr.push(lastGas + sorted[i].gas);
 
@@ -163,7 +163,8 @@ export default {
 						},
 					},
 					formatter: (p) => {
-						return `${p[0].name}: ${p[0].value.toFixed(4)}`;
+						return `<strong>${p[0].name}</strong><br> <strong>Amount:</strong> ${p[0].value.toFixed(this.decimals)} ${this.tokenInfo[this.activeToken] ?
+								this.tokenInfo[this.activeToken].symbol : ''}`;
 					},
 					color: "#fff",
 					extraCssText: `background-color: rgba(0,0,0,0.6);color:#ffffff`,

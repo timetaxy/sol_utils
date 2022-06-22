@@ -61,49 +61,7 @@
 
 		<div class="col-12 mt-3">
 			<StatCard v-show="activeTokenSummary.trade_summary.length > 0">
-				<h4><img style="height: 1rem" v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo"
-						:src="tokenInfo[activeTokenSummary.mint].logoURI" alt=""> {{
-						prices[activeTokenSummary.mint] ?
-								prices[activeTokenSummary.mint].symbol : ''
-					}} - Transactions</h4>
-				<div class="row">
-					<div class="col-12">
-						<table class="table table-sm table-hover">
-							<thead>
-							<tr class="text-center">
-								<td>Signature</td>
-								<td class="d-none d-md-table-cell">Block</td>
-								<td class="d-none d-lg-table-cell">Time</td>
-								<td class="">Token</td>
-								<td class="d-none d-lg-table-cell">Gas Cost</td>
-								<td class="">Change</td>
-								<td class="text-end">Value</td>
-							</tr>
-							</thead>
-							<tbody>
-							<TxnRow :diff="trade.diff" :prices="prices" :token-info="tokenInfo" :txn="adapted(trade)" v-for="(trade, key) in filteredTradeSummary"
-									:key="`${activeTokenSummary.mint}-${key}`"></TxnRow>
-							</tbody>
-							<tfoot>
-							<tr>
-								<td><strong>TOTAL</strong></td>
-								<td class="d-none d-md-table-cell"></td>
-								<td class="d-none d-lg-table-cell"></td>
-								<td class="d-none d-lg-table-cell"></td>
-								<td></td>
-								<td class="text-end" :class="tradeBalance >= 0 ? 'green' : 'red'">{{tradeBalance > 0 ? '+'
-										: ''}}{{tradeBalance}}
-									<img v-if="tokenInfo[activeTokenSummary.mint]" class="token-logo small"
-											:src="tokenInfo[activeTokenSummary.mint].logoURI" alt="">
-								</td>
-								<td class="text-end">{{ numFormatter.format(tradeProfit) }}
-									<SHDW mint-addr="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" class="small d-none d-md-inline-block"></SHDW>
-								</td>
-							</tr>
-							</tfoot>
-						</table>
-					</div>
-				</div>
+				<OverviewTable :summary="summary" :token-info="tokenInfo" :prices="prices" :active-token-summary="activeTokenSummary"></OverviewTable>
 
 			</StatCard>
 		</div>
@@ -114,12 +72,12 @@
 import StatCard from "./StatCard";
 import SHDW from "../tokens/SHDW";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
-import TxnRow from "./TxnRow";
 import OverviewGraph from "./OverviewGraph";
+import OverviewTable from "./OverviewTable";
 
 export default {
 	name: "OverviewCard",
-	components: {OverviewGraph, TxnRow, SHDW, StatCard},
+	components: {OverviewTable, OverviewGraph, SHDW, StatCard},
 	props: {
 		tokenInfo: {
 			type: Object,
@@ -137,9 +95,6 @@ export default {
 	data() {
 		return {
 			hideSmallCap: true,
-			page: 0,
-			limit: 25,
-
 			activeTokenSummary: {
 				amount_made: 0,
 				mint: "11111111111111111111111111111111",
@@ -163,10 +118,6 @@ export default {
 
 			return (this.summary.gas_spent / 1000000000) * this.prices['So11111111111111111111111111111111111111112'].value
 		},
-		filteredTradeSummary: function () {
-			return this.activeTokenSummary.trade_summary.filter(trade => trade.error === false).sort((a, b) => b.slot - a.slot).slice(this.page * this.limit, this.page * this.limit +
-					this.limit);
-		},
 		filteredTokens: function () {
 			const filtered = {};
 
@@ -179,16 +130,6 @@ export default {
 			}
 
 			return filtered;
-		},
-
-		tradeBalance() {
-			return this.activeTokenSummary.amount_made / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9)
-		},
-
-		tradeProfit() {
-			const tradePrice = this.prices[this.activeTokenSummary.mint] ? this.prices[this.activeTokenSummary.mint].value : 0;
-			const amount = this.activeTokenSummary.amount_made * tradePrice;
-			return (amount / Math.pow(10, this.tokenInfo[this.activeTokenSummary.mint] ? this.tokenInfo[this.activeTokenSummary.mint].decimals : 9));
 		},
 
 		totalProfit() {
@@ -219,16 +160,6 @@ export default {
 	methods: {
 		setActiveToken: function (token) {
 			this.activeTokenSummary = token
-		},
-
-		adapted(trade) {
-			return Object.assign(trade, {
-				slot: trade.slot,
-				mint: this.activeTokenSummary.mint,
-				meta: {
-					fee: trade.gas,
-				}
-			})
 		},
 	},
 }
